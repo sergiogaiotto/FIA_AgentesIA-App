@@ -22,7 +22,7 @@ app = FastAPI(
 
 # Configuração de arquivos estáticos e templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="pages")
 
 # Instâncias dos agentes (inicializadas globalmente)
 mcp_agent = None
