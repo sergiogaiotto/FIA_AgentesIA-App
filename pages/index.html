@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentes de IA - FIA</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: 70vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .message-bubble {
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+        }
+        .bot-message {
+            background: #f3f4f6;
+            color: #374151;
+            margin-right: auto;
+        }
+        .typing-indicator {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .typing-indicator.show {
+            opacity: 1;
+        }
+        .agent-selector {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-robot text-2xl text-blue-600"></i>
+                    <h1 class="text-xl font-bold text-gray-900">Agentes de IA - FIA</h1>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <i class="fas fa-university mr-1"></i>
+                    FIA.LabData - Prof. Sergio Gaiotto
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto p-4">
+        <!-- Agent Selection -->
+        <div class="mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-lg font-semibold mb-3 text-gray-800">
+                    <i class="fas fa-cogs mr-2"></i>Selecione o Agente
+                </h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- MCP Agent -->
+                    <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md" 
+                         onclick="selectAgent('mcp')" id="mcp-card">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-link text-blue-600 mr-2"></i>
+                            <h3 class="font-semibold text-gray-800">Agente MCP</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Integração dinâmica com ferramentas externas via Model Context Protocol
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Scraping Real-time</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">MCP Integration</span>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Conversacional</span>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Agent -->
+                    <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md"
+                         onclick="selectAgent('workflow')" id="workflow-card">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-sitemap text-green-600 mr-2"></i>
+                            <h3 class="font-semibold text-gray-800">Agente Workflow</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Pesquisa estruturada e análise comparativa de produtos e serviços
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Workflow Estruturado</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Análise Comparativa</span>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Recomendações</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Selected Agent Display -->
+                <div id="selected-agent" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        <span class="font-medium">Agente selecionado: </span>
+                        <span id="selected-agent-name" class="font-bold text-blue-600"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">
+                        <i class="fas fa-comments mr-2"></i>Chat com Agente
+                    </h2>
+                    <button onclick="clearChat()" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-trash mr-1"></i>Limpar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-container p-4 overflow-y-auto space-y-4">
+                <!-- Welcome Message -->
+                <div class="message-bubble bot-message rounded-lg p-3 shadow-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-robot text-blue-600 mt-1"></i>
+                        <div>
+                            <p class="text-sm">Olá! Selecione um agente acima e me faça uma pergunta sobre produtos, ferramentas ou serviços.</p>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-clock mr-1"></i>Sistema iniciado
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="typing-indicator p-4 border-t">
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                    <span class="text-sm">Agente está processando...</span>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t bg-gray-50">
+                <div class="flex space-x-3">
+                    <input type="text" 
+                           id="message-input" 
+                           placeholder="Digite sua pergunta..." 
+                           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" 
+                            id="send-button"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane mr-1"></i>Enviar
+                    </button>
+                </div>
+                <div class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Exemplos: "Melhores ferramentas de IA", "Comparar preços de CRM", "APIs de machine learning"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedAgent = null;
+        let isProcessing = false;
+
+        function selectAgent(agentType) {
+            selectedAgent = agentType;
+            
+            // Update visual selection
+            document.querySelectorAll('.agent-selector').forEach(card => {
+                card.classList.remove('bg-blue-100', 'border-blue-300', 'shadow-md');
+                card.classList.add('bg-white');
+            });
+            
+            const selectedCard = document.getElementById(`${agentType}-card`);
+            selectedCard.classList.remove('bg-white');
+            selectedCard.classList.add('bg-blue-100', 'border-blue-300', 'shadow-md');
+            
+            // Show selected agent
+            const selectedAgentDiv = document.getElementById('selected-agent');
+            const selectedAgentName = document.getElementById('selected-agent-name');
+            
+            selectedAgentDiv.classList.remove('hidden');
+            selectedAgentName.textContent = agentType === 'mcp' ? 'Agente MCP' : 'Agente Workflow';
+            
+            // Enable input
+            document.getElementById('message-input').placeholder = 
+                `Pergunte algo para o ${agentType === 'mcp' ? 'Agente MCP' : 'Agente Workflow'}...`;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            if (!selectedAgent) {
+                alert('Por favor, selecione um agente primeiro!');
+                return;
+            }
+
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            
+            if (!message || isProcessing) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            messageInput.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            isProcessing = true;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        agent_type: selectedAgent
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Add bot response
+                addMessage(data.response, 'bot', data.status);
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('❌ Erro de conexão. Tente novamente.', 'bot', 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        function addMessage(content, sender, status = 'success') {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            const isUser = sender === 'user';
+            const bubbleClass = isUser ? 'user-message' : 'bot-message';
+            const icon = isUser ? 'fas fa-user' : 'fas fa-robot';
+            const iconColor = isUser ? 'text-white' : (status === 'error' ? 'text-red-600' : 'text-blue-600');
+            
+            messageDiv.className = `message-bubble ${bubbleClass} rounded-lg p-3 shadow-sm`;
+            messageDiv.innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <i class="${icon} ${iconColor} mt-1"></i>
+                    <div class="flex-1">
+                        <div class="whitespace-pre-wrap">${formatMessage(content)}</div>
+                        <div class="text-xs ${isUser ? 'text-blue-100' : 'text-gray-500'} mt-1">
+                            <i class="fas fa-clock mr-1"></i>${new Date().toLocaleTimeString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessage(content) {
+            // Simple markdown-like formatting
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code class="bg-gray-200 px-1 rounded">$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typing-indicator').classList.add('show');
+            document.getElementById('send-button').disabled = true;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').classList.remove('show');
+            document.getElementById('send-button').disabled = false;
+        }
+
+        function clearChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = `
+                <div class="message-bubble bot-message rounded-lg p-3 shadow-sm">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-robot text-blue-600 mt-1"></i>
+                        <div>
+                            <p class="text-sm">Chat limpo! Como posso ajudar?</p>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-clock mr-1"></i>${new Date().toLocaleTimeString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('message-input').focus();
+        });
+    </script>
+</body>
+</html>
