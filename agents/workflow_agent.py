@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # Biblioteca Firecrawl
-from firecrawl import FirecrawlApp, ScrapeOptions
+from firecrawl import FirecrawlApp
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -149,8 +149,7 @@ class FirecrawlService:
         try:
             result = self.app.search(
                 query=f"{query} preços, ofertas e valores",
-                limit=num_results,
-                scrape_options=ScrapeOptions(formats=["markdown"])
+                limit=num_results
             )
             return result
         except Exception as e:
@@ -221,7 +220,7 @@ class WorkflowAgent:
 
         # Extrai conteúdo dos artigos
         all_content = ""
-        if hasattr(search_results, 'data'):
+        if hasattr(search_results, 'data') and search_results.data:
             for result in search_results.data:
                 url = result.get("url", "")
                 scraped = self.firecrawl.scrape_company_pages(url)
@@ -279,9 +278,9 @@ class WorkflowAgent:
         if not extracted_tools:
             print("Fazendo busca direta...")
             search_results = self.firecrawl.search_companies(state.query, num_results=4)
-            if hasattr(search_results, 'data'):
+            if hasattr(search_results, 'data') and search_results.data:
                 tool_names = [
-                    result.get("metadata", {}).get("title", "Unknown")
+                    result.get("metadata", {}).get("title", result.get("title", "Unknown"))
                     for result in search_results.data
                 ]
             else:

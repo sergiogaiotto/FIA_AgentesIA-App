@@ -1,4 +1,4 @@
-firecrawl-py==0.0.20
+firecrawl-py==2.8.0
 langchain==0.3.7
 langchain-openai==0.2.8
 langgraph==0.2.34
