@@ -60,7 +60,7 @@ services:
         - requirements.txt
         - agents/**
         - static/**
-        - templates/**
+        - pages/**
       ignoredPaths:
         - README.md
         - .gitignore
