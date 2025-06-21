@@ -1,68 +1,179 @@
+# render.yaml - Comentado Linha a Linha
+
 services:
+# Seção principal: define todos os serviços da aplicação
+# YAML: estrutura hierárquica usando indentação
+
   - type: web
+    # Tipo de serviço: web application
+    # Render oferece diferentes tipos: web, worker, cron, static
+    # web: serviço HTTP que aceita requisições externas
+    
     name: agentes-ia-fia
+    # Nome único do serviço no Render
+    # Usado para identificação e geração de URLs
+    # Convenção: kebab-case (hífens em minúsculas)
+    
     env: python
+    # Ambiente de execução: Python runtime
+    # Render detecta versão automaticamente ou usa especificada
+    # Outras opções: node, ruby, go, etc.
+    
     plan: free  # Pode ser alterado para starter, standard, pro conforme necessário
+    # Plano de pricing do Render
+    # free: gratuito com limitações (sleep após inatividade)
+    # starter/standard/pro: planos pagos com mais recursos
+    
     buildCommand: |
+      # Comando executado durante build/deploy
+      # | indica string multi-linha literal em YAML
+      
       pip install --upgrade pip
+      # Atualiza pip para versão mais recente
+      # Evita problemas de compatibilidade com dependências
+      
       pip install -r requirements.txt
+      # Instala dependências Python listadas em requirements.txt
+      # -r: lê lista de dependências de arquivo
+      
       npm install -g firecrawl-mcp
+      # Instala globalmente o pacote Node.js firecrawl-mcp
+      # -g: instalação global (disponível sistema-wide)
+      # Necessário para o MCP Agent funcionar
+    
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    # Comando para iniciar aplicação em produção
+    # uvicorn: servidor ASGI para aplicações Python assíncronas
+    # app:app: módulo:variável (arquivo app.py, variável app)
+    # --host 0.0.0.0: aceita conexões de qualquer IP
+    # --port $PORT: usa variável de ambiente PORT definida pelo Render
+    
     healthCheckPath: /health
+    # Endpoint para verificação de saúde da aplicação
+    # Render faz requisições GET para este path
+    # Se retornar status 200, considera aplicação saudável
+    # Load balancer usa para determinar se instância está funcionando
     
     # Configurações de ambiente
     envVars:
+    # Lista de variáveis de ambiente para a aplicação
+    
       - key: PYTHON_VERSION
         value: "3.11"
+        # Especifica versão Python a ser usada
+        # String entre aspas para evitar interpretação como número
+        # Garante compatibilidade com dependências
+        
       - key: PORT
         value: "8000"
+        # Porta padrão para desenvolvimento/fallback
+        # Render sobrescreve com porta dinâmica em produção
+        
       - key: NODE_VERSION
         value: "18"
+        # Versão Node.js para executar firecrawl-mcp
+        # Necessária para compatibilidade do pacote MCP
+        
       - key: FIRECRAWL_API_KEY
         sync: false  # Será configurada via dashboard do Render
+        # Chave API do Firecrawl
+        # sync: false = não sincroniza com repositório
+        # Deve ser configurada manualmente no dashboard por segurança
+        
       - key: OPENAI_API_KEY
         sync: false  # Será configurada via dashboard do Render
+        # Chave API da OpenAI
+        # Configuração manual protege credenciais sensíveis
     
     # Configurações de recurso
     disk:
+    # Configuração de armazenamento persistente
+    
       name: data
+      # Nome do volume de dados
+      
       mountPath: /opt/render/project/data
+      # Caminho onde volume será montado no container
+      # /opt/render/project: diretório padrão do Render
+      # /data: subdiretório para dados persistentes
+      
       sizeGB: 1
+      # Tamanho do disco em GB
+      # 1GB: suficiente para logs e dados temporários
     
     # Auto-deploy do branch main
     branch: main
+    # Branch Git que triggera deploys automáticos
+    # Quando main é atualizado, Render rebuilda automaticamente
     
     # Configurações de runtime
     runtime: python3
+    # Runtime específico: Python 3
+    # Redundante com env: python, mas explícito
     
     # Headers de segurança personalizados
     headers:
+    # Lista de headers HTTP para adicionar às respostas
+    # Importante para segurança da aplicação web
+    
       - path: /*
+        # Aplica a todas as rotas (* = wildcard)
         name: X-Frame-Options
         value: DENY
+        # Previne embedding em iframes
+        # Proteção contra clickjacking attacks
+        
       - path: /*
         name: X-Content-Type-Options
         value: nosniff
+        # Previne MIME type sniffing pelo navegador
+        # Força respeitar Content-Type declarado
+        
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+        # Controla informações de referrer enviadas
+        # strict-origin-when-cross-origin: máxima privacidade
+        
       - path: /*
         name: Permissions-Policy
         value: geolocation=(), microphone=(), camera=()
+        # Desabilita APIs sensíveis do navegador
+        # geolocation, microphone, camera: lista vazia = negado
     
     # Configurações de saúde
     initialDelaySeconds: 30
+    # Tempo de espera antes do primeiro health check
+    # 30 segundos: permite inicialização completa da aplicação
+    # Evita falsos positivos durante startup
     
     # Configurações de build
     buildFilter:
+    # Filtros para otimizar builds
+    # Define quais mudanças triggeram rebuild
+    
       paths:
+      # Lista de caminhos que trigeram rebuild quando modificados
         - app.py
+        # Arquivo principal da aplicação
         - requirements.txt
+        # Dependências Python
         - agents/**
+        # Todos os arquivos no diretório agents
+        # **: wildcard recursivo (inclui subdiretórios)
         - static/**
+        # Arquivos estáticos (CSS, JS)
         - pages/**
+        # Templates HTML
+        
       ignoredPaths:
+      # Caminhos ignorados (não trigeram rebuild)
         - README.md
+        # Documentação não afeta funcionamento
         - .gitignore
+        # Configuração Git
         - .env*
+        # Arquivos de ambiente (contêm credenciais)
+        # .env*: wildcard para .env, .env.local, etc.
         - docs/**
+        # Documentação adicional
