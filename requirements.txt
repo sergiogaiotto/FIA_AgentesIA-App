@@ -1,10 +1,74 @@
+# requirements.txt - Comentado Linha a Linha
+
 firecrawl-py==2.8.0
+# SDK oficial Python para API Firecrawl
+# Versão 2.8.0: versão específica para garantir compatibilidade
+# Firecrawl: serviço de web scraping estruturado
+# Funcionalidades: scraping, busca, extração de dados estruturados
+# Usado por ambos os agentes (MCP e Workflow)
+
 langchain==0.3.7
+# Framework principal para desenvolvimento com LLMs
+# Versão 0.3.7: versão estável específica
+# LangChain: abstração de alto nível para LLMs
+# Funcionalidades: chains, prompts, memory, tools
+# Base para integração com OpenAI e outras funcionalidades
+
 langchain-openai==0.2.8
+# Integração específica LangChain com OpenAI
+# Versão 0.2.8: compatível com langchain==0.3.7
+# Funcionalidades: ChatOpenAI, OpenAI embeddings, etc.
+# Separado do core para modularidade
+# Permite uso de outros providers de LLM se necessário
+
 langgraph==0.2.34
+# Framework para workflows complexos com agentes
+# Versão 0.2.34: versão estável para produção
+# LangGraph: extensão do LangChain para state machines
+# Usado pelo WorkflowAgent para fluxo extract → research → analyze
+# Funcionalidades: StateGraph, nodes, edges, conditional routing
+
 pydantic==2.9.2
+# Framework para validação e serialização de dados
+# Versão 2.9.2: Pydantic v2 (performance melhorada)
+# Usado para: modelos de dados tipados, validação automática
+# CompanyInfo, CompanyAnalysis, ResearchState são Pydantic models
+# Integration nativa com FastAPI para request/response validation
+
 langchain-mcp-adapters==0.1.2
+# Adaptador para integração LangChain com Model Context Protocol
+# Versão 0.1.2: versão inicial específica
+# MCP (Model Context Protocol): protocolo para ferramentas externas
+# Converte ferramentas MCP em format LangChain Tools
+# Usado pelo MCPAgent para integração dinâmica com Firecrawl
+
 python-dotenv==1.0.1
+# Biblioteca para carregar variáveis de ambiente de arquivo .env
+# Versão 1.0.1: versão estável e madura
+# Funcionalidade: load_dotenv() carrega .env automaticamente
+# Separação de configuração sensível (API keys) do código
+# Best practice para desenvolvimento local vs produção
+
 fastapi==0.115.4
+# Framework web moderno para APIs Python
+# Versão 0.115.4: versão recente com correções
+# FastAPI: baseado em Starlette + Pydantic
+# Funcionalidades: automatic docs, type validation, async support
+# Usado para servir API REST e interface web
+# Performance superior ao Flask para aplicações assíncronas
+
 uvicorn[standard]==0.32.0
+# Servidor ASGI para aplicações Python assíncronas
+# Versão 0.32.0: versão estável específica
+# [standard]: inclui dependências extras (watchfiles, etc.)
+# ASGI: interface assíncrona entre web servers e Python apps
+# Replacement para WSGI em aplicações async
+# Usado em produção no Render e desenvolvimento local
+
 jinja2==3.1.4
+# Engine de templates para renderização HTML
+# Versão 3.1.4: versão estável atual
+# Jinja2: syntax similar ao Django templates
+# Usado pelo FastAPI para servir páginas HTML (index.html)
+# Funcionalidades: template inheritance, filters, macros
+# Integração nativa com FastAPI templates
