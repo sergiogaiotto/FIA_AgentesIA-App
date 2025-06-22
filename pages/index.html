@@ -1249,7 +1249,7 @@
             });
         }
 
-        function openMermaidLiveOLD(timestamp) {
+        function openMermaidLive(timestamp) {
             const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
             const code = mermaidDiv.querySelector('pre').textContent;
             
@@ -1261,16 +1261,6 @@
             };
             const encodedState = btoa(JSON.stringify(state));
             const url = `https://mermaid.live/edit#${encodedState}`;
-            
-            window.open(url, '_blank');
-        }
-
-        function openMermaidLive(timestamp) {
-            const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
-            const code = mermaidDiv.querySelector('pre').textContent;
-            
-            // Usando query parameter
-            const url = `https://mermaid.live/edit?code=${encodeURIComponent(code)}`;
             
             window.open(url, 'popup', 'width=800,height=600,resizable=yes,scrollbars=yes');
         }
