@@ -35,7 +35,7 @@ pydantic==2.9.2
 # CompanyInfo, CompanyAnalysis, ResearchState são Pydantic models
 # Integration nativa com FastAPI para request/response validation
 
-langchain-mcp-adapters==0.1.2
+langchain-mcp-adapters==0.1.7
 # Adaptador para integração LangChain com Model Context Protocol
 # Versão 0.1.2: versão inicial específica
 # MCP (Model Context Protocol): protocolo para ferramentas externas
