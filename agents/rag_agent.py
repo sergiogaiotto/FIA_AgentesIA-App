@@ -68,9 +68,9 @@ class RAGQuery(BaseModel):
     # Quantidade de documentos para retrieval
     # Default 5: balanceia relevância e velocidade
     
-    threshold: float = Field(default=0.7, description="Threshold de similaridade")
+    threshold: float = Field(default=0.1, description="Threshold de similaridade")
     # Limite mínimo de similaridade semântica
-    # 0.7: valor conservador que filtra resultados irrelevantes
+    # 0.1: valor pouco conservador que filtra resultados irrelevantes (para podermos testar)
 
 
 class RAGDocument(BaseModel):
@@ -225,7 +225,7 @@ class PineconeService:
                     "metadata": {
                         **doc.metadata,
                         # Spread existing metadata
-                        "content": doc.content[:1000],
+                        "content": doc.content[:512],
                         # Texto truncado para metadados
                         # Pinecone tem limite de tamanho para metadata
                     }
@@ -245,7 +245,7 @@ class PineconeService:
             return False
             # Graceful degradation: retorna False em vez de falhar
     
-    async def search(self, query: str, top_k: int = 5, threshold: float = 0.7) -> List[RAGDocument]:
+    async def search(self, query: str, top_k: int = 4, threshold: float = 0.1) -> List[RAGDocument]:
         """Busca documentos similares à query"""
         # Semantic search: busca por similaridade semântica
         # top_k: quantidade de resultados
@@ -516,7 +516,7 @@ class RAGAgent:
             print(f"❌ Erro ao adicionar texto: {e}")
             return False
     
-    async def query(self, user_query: str, top_k: int = 5, threshold: float = 0.7) -> RAGResponse:
+    async def query(self, user_query: str, top_k: int = 4, threshold: float = 0.1) -> RAGResponse:
         """Processa query usando RAG"""
         # Método principal: implementa pipeline RAG completo
         # Query → Retrieval → Augmentation → Generation
@@ -646,7 +646,7 @@ Por favor, responda baseando-se apenas nas informações fornecidas no contexto.
         try:
             # Busca fontes relevantes
             search_query = f"{domain} documentation tutorial guide"
-            results = self.firecrawl.search(search_query, limit=5)
+            results = self.firecrawl.search(search_query, limit=4)
             
             if hasattr(results, 'data') and results.data:
                 return [result.get('url', '') for result in results.data if result.get('url')]
