@@ -1,4 +1,4 @@
-# render.yaml - Comentado Linha a Linha (Atualizado)
+# render.yaml - Comentado Linha a Linha (Atualizado com ClassificaImagem Agent)
 
 services:
 # Seção principal: define todos os serviços da aplicação
@@ -23,6 +23,7 @@ services:
     # Plano de pricing do Render
     # free: gratuito com limitações (sleep após inatividade)
     # starter/standard/pro: planos pagos com mais recursos
+    # NOTA: ClassificaImagem Agent pode beneficiar de planos pagos para melhor performance
     
     buildCommand: |
       # Comando executado durante build/deploy
@@ -32,22 +33,39 @@ services:
       # Atualiza pip para versão mais recente
       # Evita problemas de compatibilidade com dependências
       
+      # Instalar dependências do sistema para processamento de imagem
+      apt-get update && apt-get install -y \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender-dev \
+        libgomp1 \
+        libgthread-2.0-0
+      # Dependências necessárias para OpenCV e processamento de imagem
+      # libgl1-mesa-glx: OpenGL para processamento gráfico
+      # libglib2.0-0: biblioteca base do GNOME
+      # libsm6, libxext6, libxrender-dev: X11 libraries
+      # libgomp1: OpenMP para paralelização
+      # libgthread-2.0-0: threading support
+      
       pip install -r requirements.txt
       # Instala dependências Python listadas em requirements.txt
       # -r: lê lista de dependências de arquivo
-      # Inclui novas dependências: pinecone-client, langchain-pinecone
+      # Inclui dependências: pinecone-client, langchain-pinecone, LlamaIndex, OpenCV, Pillow
       
       npm install -g firecrawl-mcp
       # Instala globalmente o pacote Node.js firecrawl-mcp
       # -g: instalação global (disponível sistema-wide)
       # Necessário para o MCP Agent funcionar
     
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --workers 1
     # Comando para iniciar aplicação em produção
     # uvicorn: servidor ASGI para aplicações Python assíncronas
     # app:app: módulo:variável (arquivo app.py, variável app)
     # --host 0.0.0.0: aceita conexões de qualquer IP
     # --port $PORT: usa variável de ambiente PORT definida pelo Render
+    # --workers 1: single worker para evitar conflitos de memória com vision models
     
     healthCheckPath: /health
     # Endpoint para verificação de saúde da aplicação
@@ -63,7 +81,7 @@ services:
         value: "3.11"
         # Especifica versão Python a ser usada
         # String entre aspas para evitar interpretação como número
-        # Garante compatibilidade com dependências
+        # Garante compatibilidade com dependências LlamaIndex
         
       - key: PORT
         value: "8000"
@@ -84,6 +102,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false  # Será configurada via dashboard do Render
         # Chave API da OpenAI
+        # OBRIGATÓRIA para ClassificaImagem Agent
         # Configuração manual protege credenciais sensíveis
         
       - key: PINECONE_API_KEY
@@ -91,6 +110,42 @@ services:
         # Chave API do Pinecone para vector database
         # Necessária para funcionalidade RAG (Retrieval-Augmented Generation)
         # Deve ser configurada manualmente por segurança
+        
+      # Configurações específicas do ClassificaImagem Agent
+      - key: IMAGE_DOWNLOAD_TIMEOUT
+        value: "45"
+        # Timeout aumentado para download de imagens em produção
+        # 45 segundos para conexões mais lentas
+        
+      - key: MAX_IMAGE_SIZE_MB
+        value: "15"
+        # Tamanho máximo reduzido para otimizar performance
+        # 15MB para evitar problemas de memória no free tier
+        
+      - key: VISION_MODEL
+        value: "gpt-4o-mini"
+        # Modelo padrão para análise de imagem
+        # gpt-4o-mini: mais econômico e rápido
+        
+      - key: VISION_TEMPERATURE
+        value: "0.1"
+        # Temperatura baixa para respostas mais determinísticas
+        # Importante para análises consistentes
+        
+      - key: VISION_MAX_TOKENS
+        value: "3000"
+        # Máximo de tokens reduzido para otimizar custo
+        # 3000 tokens suficiente para análises detalhadas
+        
+      - key: IMAGE_ANALYSIS_LOGGING
+        value: "false"
+        # Desabilitar logs detalhados em produção
+        # Evita poluição de logs e melhora performance
+        
+      - key: ACCEPTED_IMAGE_FORMATS
+        value: "jpg,jpeg,png,gif,webp"
+        # Formatos de imagem aceitos
+        # Exclui BMP para otimização
     
     # Configurações de recurso
     disk:
@@ -104,10 +159,10 @@ services:
       # /opt/render/project: diretório padrão do Render
       # /data: subdiretório para dados persistentes
       
-      sizeGB: 1
-      # Tamanho do disco em GB
-      # 1GB: suficiente para logs e dados temporários
-      # RAG usa Pinecone (cloud), não armazenamento local
+      sizeGB: 2
+      # Tamanho do disco em 2GB
+      # Espaço adicional para cache de imagens e modelos
+      # ClassificaImagem pode gerar arquivos temporários maiores
     
     # Auto-deploy do branch main
     branch: main
@@ -148,13 +203,19 @@ services:
         value: geolocation=(), microphone=(), camera=()
         # Desabilita APIs sensíveis do navegador
         # geolocation, microphone, camera: lista vazia = negado
+        
+      - path: /imagem/*
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+        # Headers específicos para endpoints de imagem
+        # Evita cache de análises sensíveis
     
     # Configurações de saúde
-    initialDelaySeconds: 30
+    initialDelaySeconds: 60
     # Tempo de espera antes do primeiro health check
-    # 30 segundos: permite inicialização completa da aplicação
-    # Evita falsos positivos durante startup
-    # RAG Agent pode precisar de tempo extra para configurar Pinecone
+    # 60 segundos: permite inicialização completa da aplicação
+    # ClassificaImagem Agent precisa carregar modelos LlamaIndex
+    # Tempo aumentado para acomodar carregamento de dependências de visão
     
     # Configurações de build
     buildFilter:
@@ -166,11 +227,11 @@ services:
         - app.py
         # Arquivo principal da aplicação
         - requirements.txt
-        # Dependências Python (atualizado com Pinecone)
+        # Dependências Python (atualizado com LlamaIndex)
         - agents/**
         # Todos os arquivos no diretório agents
         # **: wildcard recursivo (inclui subdiretórios)
-        # Inclui novo rag_agent.py
+        # Inclui novo classifica_imagem_agent.py
         - static/**
         # Arquivos estáticos (CSS, JS)
         - pages/**
@@ -187,3 +248,50 @@ services:
         # .env*: wildcard para .env, .env.local, etc.
         - docs/**
         # Documentação adicional
+        - exemplo_uso_classifica_imagem.py
+        # Scripts de exemplo não afetam produção
+        - CLASSIFICA_IMAGEM_DOCS.md
+        # Documentação específica
+    
+    # Configurações de memória e CPU
+    scaling:
+    # Configurações de escalabilidade
+      minInstances: 1
+      # Mínimo de 1 instância sempre ativa
+      # Evita cold starts para ClassificaImagem Agent
+      
+      maxInstances: 2
+      # Máximo de 2 instâncias no free tier
+      # ClassificaImagem Agent pode ser memory-intensive
+    
+    # Configurações de rede
+    routes:
+    # Configurações de roteamento específicas
+      - type: rewrite
+        source: /imagem/analyze
+        destination: /imagem/analyze
+        # Rota específica para análise de imagem
+        
+      - type: rewrite
+        source: /docs
+        destination: /docs
+        # Mantém documentação da API acessível
+
+# Configurações globais do deploy
+buildCommand: |
+  # Comando global de build executado uma vez
+  echo "🚀 Iniciando deploy dos Agentes de IA - v1.4.0"
+  echo "📦 Instalando dependências para ClassificaImagem Agent..."
+  echo "🖼️ Configurando processamento de imagem..."
+  echo "✅ Build concluído com sucesso!"
+
+# Notificações de deploy
+notifications:
+  # Lista de notificações para eventos de deploy
+  - type: email
+    # Tipo de notificação
+    events: [deploy-succeeded, deploy-failed]
+    # Eventos que triggeram notificação
+    filter:
+      branch: main
+      # Apenas para branch main
