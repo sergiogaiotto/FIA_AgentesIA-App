@@ -1258,21 +1258,28 @@
             window.open(url, 'popup', 'width=800,height=600,toolbar=1,Location=0,Directories=0,Status=0,menubar=1,Scrollbars=1,Resizable=1');
         }
 
+        function uint8ToBase64(uint8Array) {
+            let binary = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binary += String.fromCharCode(uint8Array[i]);
+            }
+            return btoa(binary);
+        }
+
         function openMermaidLive(timestamp) {
             const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
             const code = mermaidDiv.querySelector('pre').textContent;
 
-            // Compacta o código com pako (zlib)
-            const compressed = pako.deflate(code, { to: 'string' });
+            // Compacta o código com pako (zlib) — retorna Uint8Array
+            const compressed = pako.deflate(code);
 
-            // Codifica para Base64 padrão
-            const base64 = btoa(compressed);
+            // Converte Uint8Array para Base64 padrão
+            const base64 = uint8ToBase64(compressed);
 
             // Converte para Base64 URL-safe (substitui +, / e remove =)
             const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
             const url = `https://mermaid.live/edit#pako:${base64url}`;
-            alert(url);
             window.open(url, 'popup', 'width=800,height=600,toolbar=1,Location=0,Directories=0,Status=0,menubar=1,Scrollbars=1,Resizable=1');
         }
 
