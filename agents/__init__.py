@@ -37,4 +37,4 @@ __all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent"]
 # Best practice: define API pública explicitamente
 # Evita importação acidental de símbolos internos
 # Documentação implícita das classes principais disponíveis
-# Atualizado para incluir RAGAgent na API pública
+# RAGAgent na API pública

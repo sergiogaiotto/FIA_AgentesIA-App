@@ -64,7 +64,7 @@ class RAGQuery(BaseModel):
     # Campo obrigatório: pergunta do usuário
     # Field(...): campo obrigatório com metadados
     
-    top_k: int = Field(default=5, description="Número de documentos similares")
+    top_k: int = Field(default=4, description="Número de documentos similares")
     # Quantidade de documentos para retrieval
     # Default 5: balanceia relevância e velocidade
     
@@ -285,8 +285,10 @@ class PineconeService:
                         content=match.metadata.get("content", ""),
                         # Recupera conteúdo dos metadados
                         metadata=match.metadata,
-                        score=match.score
+                        score=match.score,
                         # Inclui score para ranking
+                        threshold=threshold
+                        # Inclui threshold para lembrar do valor definido
                     )
                     documents.append(doc)
             
@@ -382,10 +384,10 @@ class RAGAgent:
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=512,
             # Tamanho do chunk: balance entre contexto e performance
-            # 1000 chars: suficiente para parágrafos completos
+            # 512 chars: suficiente para parágrafos completos
             chunk_overlap=128,
             # Overlap: mantém continuidade semântica
-            # 200 chars: overlap significativo mas não excessivo
+            # 128 chars: overlap significativo mas não excessivo
             separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
             # Ordem de prioridade para quebras
             # Prioriza quebras semânticas (parágrafos, frases)
@@ -534,7 +536,7 @@ class RAGAgent:
             if not relevant_docs:
                 # Fallback quando não há documentos relevantes
                 return RAGResponse(
-                    answer="Desculpe, não encontrei informações relevantes na base de conhecimento para responder sua pergunta. Tente reformular ou adicionar mais contexto.",
+                    answer="Não encontrei informações relevantes na base de conhecimento para responder sua pergunta. Tente reformular ou adicionar mais contexto.",
                     sources=[],
                     query=user_query,
                     confidence=0.0
@@ -548,11 +550,9 @@ class RAGAgent:
             messages = [
                 SystemMessage(content=self.system_prompt),
                 HumanMessage(content=f"""Contexto dos documentos:
-{context}
-
-Pergunta do usuário: {user_query}
-
-Por favor, responda baseando-se apenas nas informações fornecidas no contexto.""")
+                {context}
+                Pergunta do usuário: {user_query}
+                Por favor, responda baseando-se apenas nas informações fornecidas no contexto.""")
             ]
             
             response = self.llm.invoke(messages)
