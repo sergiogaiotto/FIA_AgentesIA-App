@@ -103,3 +103,6 @@ langchain-text-splitters==0.3.0
 # Funcionalidades: RecursiveCharacterTextSplitter, chunk strategies
 # Usado pelo RAGAgent para preparar documentos para indexação
 # Otimizações: preserva contexto semântico, overlap configurável
+
+aiohttp==3.9.5
+# Chamada API externa, que neste caso será para o Flowise

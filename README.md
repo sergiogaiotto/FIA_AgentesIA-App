@@ -1,6 +1,6 @@
 # Agentes de IA - FIA
 
-Plataforma avançada com **três agentes especializados** em pesquisa, análise e Retrieval-Augmented Generation (RAG), desenvolvida para demonstrar diferentes abordagens de IA aplicada.
+Plataforma avançada com **quatro agentes especializados** em pesquisa, análise, RAG e integrações externas, desenvolvida para demonstrar diferentes abordagens de IA aplicada.
 
 ## 🤖 Agentes Disponíveis
 
@@ -20,7 +20,7 @@ Plataforma avançada com **três agentes especializados** em pesquisa, análise 
   - Análise comparativa de produtos/serviços
   - Recomendações técnicas objetivas
 
-### 3. **Agente RAG** ⭐ *NOVO*
+### 3. **Agente RAG**
 - **Especialidade**: Retrieval-Augmented Generation
 - **Tecnologia**: Pinecone + OpenAI Embeddings
 - **Funcionalidades**:
@@ -28,6 +28,15 @@ Plataforma avançada com **três agentes especializados** em pesquisa, análise 
   - Citação de fontes utilizadas
   - Scoring de confiança das respostas
   - Gestão dinâmica da base de conhecimento
+
+### 4. **Agente Externo** ⭐ *NOVO*
+- **Especialidade**: Integração com APIs externas
+- **Tecnologia**: aiohttp + Flowise API
+- **Funcionalidades**:
+  - Comunicação com APIs externas (Flowise)
+  - Manutenção de contexto conversacional
+  - Processamento especializado via serviços externos
+  - Monitoramento de conectividade
 
 ## 🚀 Instalação e Configuração
 
@@ -38,6 +47,7 @@ Plataforma avançada com **três agentes especializados** em pesquisa, análise 
   - [OpenAI](https://platform.openai.com/) (obrigatório)
   - [Firecrawl](https://firecrawl.dev/) (MCP e Workflow)
   - [Pinecone](https://www.pinecone.io/) (RAG Agent)
+  - API Flowise (Agente Externo)
 
 ### 1. Clone do Repositório
 ```bash
@@ -82,6 +92,8 @@ PINECONE_API_KEY=your-pinecone-key-here       # RAG Agent
 PORT=8000
 ```
 
+**Nota**: O Agente Externo não requer configurações específicas de chaves de API, pois utiliza a API pública do Flowise.
+
 ## 🎯 Como Usar
 
 ### Execução Local
@@ -93,12 +105,48 @@ A aplicação estará disponível em: `http://localhost:8000`
 
 ### Interface Web
 
-1. **Seleção de Agente**: Escolha um dos três agentes disponíveis
+1. **Seleção de Agente**: Escolha um dos quatro agentes disponíveis
 2. **Chat Interativo**: Faça perguntas naturalmente
 3. **Recursos Especiais**:
    - **RAG Agent**: Painel de gestão da base de conhecimento
+   - **Agente Externo**: Painel de status e configuração da API
    - **Todas**: Indicadores visuais de progresso
    - **RAG**: Fontes citadas e score de confiança
+
+## 🌐 Usando o Agente Externo
+
+### Funcionalidades Principais
+
+O Agente Externo permite integração com APIs externas, especificamente otimizado para Flowise:
+
+#### Processamento de Prompts
+```
+"Explique conceitos de machine learning de forma simples"
+"Como funciona deep learning em visão computacional?"
+"Quais são as melhores práticas para prompt engineering?"
+```
+
+#### Monitoramento via Interface Web
+1. Selecione "Agente Externo"
+2. Clique em "Status & Config"
+3. Use os controles para:
+   - Verificar status da API
+   - Resetar contexto conversacional
+   - Testar conectividade
+
+### Configuração da API Flowise
+
+O agente está pré-configurado para usar:
+- **Endpoint**: `https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a`
+- **Timeout**: 30 segundos
+- **Contexto**: Mantém histórico de 10 mensagens
+
+Para usar uma API Flowise personalizada, modifique o endpoint no código:
+
+```python
+# Em agents/externo_agent.py
+externo_agent = ExternoAgent(api_url="sua-api-flowise-aqui")
+```
 
 ## 🧠 Usando o Agente RAG
 
@@ -139,14 +187,18 @@ await rag_agent.add_knowledge_from_text(
 
 ## 📊 Comparação dos Agentes
 
-| Recurso | MCP | Workflow | RAG |
-|---------|-----|----------|-----|
-| **Tempo Real** | ✅ | ✅ | ❌ |
-| **Memória Persistente** | ❌ | ❌ | ✅ |
-| **Fontes Citadas** | ❌ | ✅ | ✅ |
-| **Análise Estruturada** | ❌ | ✅ | ❌ |
-| **Pesquisa Semântica** | ❌ | ❌ | ✅ |
-| **Base Customizável** | ❌ | ❌ | ✅ |
+| Recurso | MCP | Workflow | RAG | Externo |
+|---------|-----|----------|-----|---------|
+| **Tempo Real** | ✅ | ✅ | ❌ | ✅ |
+| **Memória Persistente** | ❌ | ❌ | ✅ | ✅* |
+| **Fontes Citadas** | ❌ | ✅ | ✅ | ❌ |
+| **Análise Estruturada** | ❌ | ✅ | ❌ | ❌ |
+| **Pesquisa Semântica** | ❌ | ❌ | ✅ | ❌ |
+| **Base Customizável** | ❌ | ❌ | ✅ | ❌ |
+| **APIs Externas** | ✅ | ❌ | ❌ | ✅ |
+| **Contexto Conversacional** | ✅ | ❌ | ❌ | ✅ |
+
+*\* Contexto mantido durante a sessão*
 
 ## 🛠️ Estrutura do Projeto
 
@@ -156,7 +208,8 @@ FIA_AgentesIA/
 │   ├── __init__.py          # Exports dos agentes
 │   ├── mcp_agent.py         # Agente MCP
 │   ├── workflow_agent.py    # Agente Workflow  
-│   └── rag_agent.py         # Agente RAG ⭐
+│   ├── rag_agent.py         # Agente RAG
+│   └── externo_agent.py     # Agente Externo ⭐
 ├── pages/
 │   └── index.html           # Interface web atualizada
 ├── static/
@@ -191,6 +244,8 @@ OPENAI_API_KEY=sk-your-openai-key
 # Opcionais (habilitam agentes específicos)
 FIRECRAWL_API_KEY=fc-your-firecrawl-key  
 PINECONE_API_KEY=your-pinecone-key
+
+# Agente Externo não requer variáveis específicas
 ```
 
 ## 🔧 APIs Disponíveis
@@ -206,21 +261,28 @@ PINECONE_API_KEY=your-pinecone-key
 - `GET /rag/stats` - Estatísticas da base
 - `GET /rag/suggest-sources/{domain}` - Sugerir fontes
 
+### Endpoints Agente Externo
+- `GET /externo/status` - Status da API Flowise
+- `POST /externo/reset` - Reset contexto conversacional
+
 ### Exemplo de Uso da API
 
 ```python
 import requests
 
-# Chat com RAG Agent
+# Chat com Agente Externo
 response = requests.post("http://localhost:8000/chat", json={
-    "message": "Como funciona machine learning?",
-    "agent_type": "rag"
+    "message": "Explique machine learning de forma simples",
+    "agent_type": "externo"
 })
 
 result = response.json()
 print(f"Resposta: {result['response']}")
-print(f"Confiança: {result['confidence']}")
-print(f"Fontes: {len(result['sources'])}")
+print(f"Status: {result['status']}")
+
+# Verificar status do Agente Externo
+status = requests.get("http://localhost:8000/externo/status")
+print(f"Status API: {status.json()}")
 ```
 
 ## 📈 Monitoramento e Estatísticas
@@ -231,6 +293,12 @@ print(f"Fontes: {len(result['sources'])}")
 - Distribuição de scores de confiança
 - Fontes mais utilizadas
 
+### Métricas do Agente Externo
+- Status de conectividade com Flowise
+- Quantidade de mensagens na sessão
+- Tempo de resposta da API
+- Histórico conversacional
+
 ### Health Checks
 ```bash
 # Verificar status geral
@@ -238,6 +306,9 @@ curl http://localhost:8000/health
 
 # Estatísticas RAG
 curl http://localhost:8000/rag/stats
+
+# Status Agente Externo
+curl http://localhost:8000/externo/status
 ```
 
 ## 🎓 Casos de Uso
@@ -256,6 +327,12 @@ curl http://localhost:8000/rag/stats
 - Suporte técnico com base de conhecimento
 - Q&A sobre documentação interna
 - Pesquisa semântica em artigos/manuais
+
+### Agente Externo
+- Processamento especializado via Flowise
+- Integração com pipelines de IA externos
+- Análise avançada de linguagem natural
+- Prototipagem rápida com APIs externas
 
 ## 🚨 Troubleshooting
 
@@ -285,6 +362,16 @@ npm install -g firecrawl-mcp
 - Confirmar conectividade de rede
 - Testar com queries mais específicas
 
+#### Agente Externo não responde
+- Verificar conectividade com internet
+- Testar endpoint Flowise manualmente:
+  ```bash
+  curl -X POST https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a \
+       -H "Content-Type: application/json" \
+       -d '{"question": "test"}'
+  ```
+- Usar painel de status na interface web
+
 ## 📝 Licença
 
 MIT License - veja LICENSE para detalhes.
@@ -301,6 +388,14 @@ MIT License - veja LICENSE para detalhes.
 
 ## 🔄 Atualizações Recentes
 
+### v1.2.0 - Agente Externo
+- ✅ Novo Agente Externo para APIs externas
+- ✅ Integração com Flowise API
+- ✅ Painel de status e configuração
+- ✅ Contexto conversacional mantido
+- ✅ Monitoramento de conectividade
+- ✅ Interface atualizada com 4 agentes
+
 ### v1.1.0 - Agente RAG
 - ✅ Novo Agente RAG com Pinecone
 - ✅ Interface de gestão de conhecimento
@@ -316,4 +411,4 @@ MIT License - veja LICENSE para detalhes.
 
 ---
 
-**🚀 Experimente os três agentes e descubra diferentes abordagens para IA aplicada!**
+**🚀 Experimente os quatro agentes e descubra diferentes abordagens para IA aplicada!**

@@ -66,6 +66,38 @@
         .knowledge-panel.show {
             display: block;
         }
+        .externo-panel {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .externo-panel.show {
+            display: block;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #10b981;
+        }
+        .status-offline {
+            background-color: #ef4444;
+        }
+        .status-checking {
+            background-color: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -93,7 +125,7 @@
                 <h2 class="text-lg font-semibold mb-3 text-gray-800">
                     <i class="fas fa-cogs mr-2"></i>Selecione o Agente
                 </h2>
-                <div class="grid md:grid-cols-3 gap-4">
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- MCP Agent -->
                     <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md" 
                          onclick="selectAgent('mcp')" id="mcp-card">
@@ -144,6 +176,23 @@
                             <span class="px-2 py-1 bg-pink-100 text-pink-800 text-xs rounded">Citação Fontes</span>
                         </div>
                     </div>
+
+                    <!-- Agente Externo -->
+                    <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md"
+                         onclick="selectAgent('externo')" id="externo-card">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-globe text-orange-600 mr-2"></i>
+                            <h3 class="font-semibold text-gray-800">Agente Externo</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Integração com APIs externas (Flowise) para processamento especializado
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">API Externa</span>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Flowise</span>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Contextual</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Selected Agent Display -->
@@ -154,10 +203,17 @@
                             <span class="font-medium">Agente selecionado: </span>
                             <span id="selected-agent-name" class="font-bold text-blue-600"></span>
                         </div>
-                        <!-- RAG Knowledge Management Button -->
-                        <button id="knowledge-btn" class="hidden bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors" onclick="toggleKnowledgePanel()">
-                            <i class="fas fa-database mr-1"></i>Gerenciar Base
-                        </button>
+                        <!-- Agent-specific buttons -->
+                        <div class="flex space-x-2">
+                            <!-- RAG Knowledge Management Button -->
+                            <button id="knowledge-btn" class="hidden bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors" onclick="toggleKnowledgePanel()">
+                                <i class="fas fa-database mr-1"></i>Gerenciar Base
+                            </button>
+                            <!-- Externo Status Button -->
+                            <button id="externo-btn" class="hidden bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition-colors" onclick="toggleExternoPanel()">
+                                <i class="fas fa-cog mr-1"></i>Status & Config
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -215,6 +271,54 @@
                             </button>
                         </div>
                         <div id="suggested-sources" class="text-sm text-gray-600"></div>
+                    </div>
+                </div>
+
+                <!-- Externo Agent Panel -->
+                <div id="externo-panel" class="externo-panel">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-800">
+                        <i class="fas fa-globe mr-2"></i>Agente Externo - Status & Configuração
+                    </h3>
+                    
+                    <!-- Status Display -->
+                    <div id="externo-status" class="bg-gray-50 rounded p-3 mb-4">
+                        <div class="text-sm text-gray-600">Verificando status...</div>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <button onclick="checkExternoStatus()" 
+                                class="bg-blue-600 text-white py-2 px-4 rounded text-sm hover:bg-blue-700">
+                            <i class="fas fa-sync mr-1"></i>Verificar Status
+                        </button>
+                        <button onclick="resetExternoConversation()" 
+                                class="bg-yellow-600 text-white py-2 px-4 rounded text-sm hover:bg-yellow-700">
+                            <i class="fas fa-refresh mr-1"></i>Reset Conversa
+                        </button>
+                        <button onclick="testExternoConnection()" 
+                                class="bg-green-600 text-white py-2 px-4 rounded text-sm hover:bg-green-700">
+                            <i class="fas fa-vial mr-1"></i>Testar Conexão
+                        </button>
+                    </div>
+
+                    <!-- Configuration Info -->
+                    <div class="border-t pt-4">
+                        <h4 class="font-medium mb-2">Informações da API</h4>
+                        <div id="externo-config" class="text-sm text-gray-600 bg-white rounded p-3 border">
+                            <div class="mb-2">
+                                <strong>Endpoint:</strong> 
+                                <span class="font-mono text-xs">https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Tipo:</strong> Flowise API
+                            </div>
+                            <div class="mb-2">
+                                <strong>Contexto:</strong> Mantém histórico de conversa
+                            </div>
+                            <div>
+                                <strong>Timeout:</strong> 30 segundos
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -305,27 +409,38 @@
             const selectedAgentDiv = document.getElementById('selected-agent');
             const selectedAgentName = document.getElementById('selected-agent-name');
             const knowledgeBtn = document.getElementById('knowledge-btn');
+            const externoBtn = document.getElementById('externo-btn');
             
             selectedAgentDiv.classList.remove('hidden');
             
             const agentNames = {
                 'mcp': 'Agente MCP',
                 'workflow': 'Agente Workflow',
-                'rag': 'Agente RAG'
+                'rag': 'Agente RAG',
+                'externo': 'Agente Externo'
             };
             
             selectedAgentName.textContent = agentNames[agentType];
             
-            // Show knowledge management button only for RAG agent
+            // Hide all special buttons first
+            knowledgeBtn.classList.add('hidden');
+            externoBtn.classList.add('hidden');
+            
+            // Show relevant button based on agent type
             if (agentType === 'rag') {
                 knowledgeBtn.classList.remove('hidden');
                 loadKnowledgeStats();
                 updateInputHint('Faça perguntas baseadas na base de conhecimento...');
+            } else if (agentType === 'externo') {
+                externoBtn.classList.remove('hidden');
+                updateInputHint('Envie prompts para processamento via Flowise...');
             } else {
-                knowledgeBtn.classList.add('hidden');
-                document.getElementById('knowledge-panel').classList.remove('show');
                 updateInputHint(`Pergunte algo para o ${agentNames[agentType]}...`);
             }
+            
+            // Hide all panels
+            document.getElementById('knowledge-panel').classList.remove('show');
+            document.getElementById('externo-panel').classList.remove('show');
             
             // Enable input
             document.getElementById('message-input').placeholder = 
@@ -669,6 +784,130 @@
             // Scroll to URL input
             document.getElementById('knowledge-url').scrollIntoView({ behavior: 'smooth' });
             document.getElementById('knowledge-url').focus();
+        }
+
+        // Externo Agent Functions
+        function toggleExternoPanel() {
+            const panel = document.getElementById('externo-panel');
+            panel.classList.toggle('show');
+            
+            if (panel.classList.contains('show')) {
+                checkExternoStatus();
+            }
+        }
+
+        async function checkExternoStatus() {
+            const statusDiv = document.getElementById('externo-status');
+            statusDiv.innerHTML = `
+                <div class="flex items-center text-sm text-gray-600">
+                    <span class="status-indicator status-checking"></span>
+                    Verificando status da API Flowise...
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/externo/status');
+                const status = await response.json();
+                
+                const statusClass = status.status === 'available' ? 'status-online' : 'status-offline';
+                const statusText = status.status === 'available' ? 'Online' : 'Offline';
+                const statusColor = status.status === 'available' ? 'text-green-600' : 'text-red-600';
+                
+                statusDiv.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="font-medium">Status da API</div>
+                            <div class="flex items-center ${statusColor}">
+                                <span class="status-indicator ${statusClass}"></span>
+                                ${statusText}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-medium">Mensagens na Sessão</div>
+                            <div class="text-lg font-bold text-blue-600">${status.message_count || 0}</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Endpoint: ${status.endpoint || 'N/A'}<br>
+                        Sessão: ${status.session_id || 'N/A'}
+                    </div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="flex items-center text-sm text-red-600">
+                        <span class="status-indicator status-offline"></span>
+                        Erro ao verificar status: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function resetExternoConversation() {
+            if (!confirm('Tem certeza que deseja resetar a conversa? O histórico será perdido.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/externo/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('✅ Conversa resetada com sucesso!');
+                    checkExternoStatus(); // Atualizar status
+                } else {
+                    alert('❌ Erro ao resetar conversa');
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        async function testExternoConnection() {
+            const statusDiv = document.getElementById('externo-status');
+            const originalContent = statusDiv.innerHTML;
+            
+            statusDiv.innerHTML = `
+                <div class="flex items-center text-sm text-blue-600">
+                    <span class="status-indicator status-checking"></span>
+                    Testando conexão com Flowise...
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'test connection',
+                        agent_type: 'externo'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('✅ Conexão testada com sucesso!\nResposta: ' + data.response.substring(0, 100) + '...');
+                } else {
+                    alert('❌ Falha no teste de conexão:\n' + data.response);
+                }
+                
+            } catch (error) {
+                alert('❌ Erro no teste de conexão: ' + error.message);
+            } finally {
+                // Restaurar conteúdo original após um breve delay
+                setTimeout(() => {
+                    statusDiv.innerHTML = originalContent;
+                }, 2000);
+            }
         }
 
         // Initialize

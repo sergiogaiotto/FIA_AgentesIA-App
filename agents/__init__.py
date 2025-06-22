@@ -31,7 +31,7 @@ from .rag_agent import RAGAgent
 # RAGAgent: classe para Retrieval-Augmented Generation
 # Nova funcionalidade: pesquisa semântica com Pinecone
 
-__all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent"]
+__all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent", "FlowiseRequest"]
 # Lista explícita de símbolos públicos do módulo
 # Controla o que é importado com "from agents import *"
 # Best practice: define API pública explicitamente
