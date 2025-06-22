@@ -73,8 +73,6 @@ jinja2==3.1.4
 # Funcionalidades: template inheritance, filters, macros
 # Integração nativa com FastAPI templates
 
-# === NOVAS DEPENDÊNCIAS PARA RAG ===
-
 pinecone-client==5.0.1
 # SDK oficial Python para Pinecone vector database
 # Versão 5.0.1: versão mais recente e estável
@@ -105,4 +103,8 @@ langchain-text-splitters==0.3.0
 # Otimizações: preserva contexto semântico, overlap configurável
 
 aiohttp==3.9.5
-# Chamada API externa, que neste caso será para o Flowise
+# Cliente HTTP assíncrono para Python
+# Versão 3.9.5: versão estável com correções de segurança
+# Funcionalidades: requisições async, sessões, timeouts
+# Usado pelo ExternoAgent para comunicação com Flowise API
+# Melhor performance que requests em aplicações async
