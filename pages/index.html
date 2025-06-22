@@ -1249,11 +1249,12 @@
             });
         }
 
-        function openMermaidLive_old(timestamp) {
+        function openMermaidLiveold(timestamp) {
             const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
             const code = mermaidDiv.querySelector('pre').textContent;
             const encodedCode = encodeURIComponent(code);
             const url = `https://mermaid.live/edit#pako:${btoa(code)}`;
+            alert(url);
             window.open(url, 'popup', 'width=800,height=600,toolbar=1,Location=0,Directories=0,Status=0,menubar=1,Scrollbars=1,Resizable=1');
         }
 
@@ -1271,6 +1272,7 @@
             const base64url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
             const url = `https://mermaid.live/edit#pako:${base64url}`;
+            alert(url);
             window.open(url, 'popup', 'width=800,height=600,toolbar=1,Location=0,Directories=0,Status=0,menubar=1,Scrollbars=1,Resizable=1');
         }
 
