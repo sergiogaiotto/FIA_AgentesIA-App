@@ -612,7 +612,7 @@ async def agents_info():
         "agents": [
             {
                 "type": "mcp",
-                "name": "Agente MCP",
+                "name": "Agente MCP Firecrawl",
                 "description": "Agente inteligente com integração MCP e Firecrawl para scraping dinâmico",
                 "features": ["Scraping em tempo real", "Integração MCP", "Análise conversacional"],
                 "available": mcp_agent is not None
@@ -620,7 +620,7 @@ async def agents_info():
             },
             {
                 "type": "workflow", 
-                "name": "Agente Workflow",
+                "name": "Agente Workflow Firecrawl",
                 "description": "Agente especializado em pesquisa estruturada e análise comparativa",
                 "features": ["Workflow estruturado", "Análise comparativa", "Recomendações técnicas"],
                 "available": workflow_agent is not None

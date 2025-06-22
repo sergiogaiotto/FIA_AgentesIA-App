@@ -82,9 +82,9 @@ class FlowiseService:
     def __init__(self, api_url: str = None):
         """Inicializa serviço Flowise"""
         # api_url: URL da API Flowise (pode ser customizada)
-        
+
         # URL padrão fornecida pelo usuário
-        self.api_url = api_url or "https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a"
+        self.api_url = api_url or os.getenv("API_EXTERNO_AGENT") # "https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a"
         # URL completa da API Flowise com endpoint específico
         
         # Headers padrão para requisições

@@ -181,10 +181,10 @@
                          onclick="selectAgent('mcp')" id="mcp-card">
                         <div class="flex items-center mb-2">
                             <i class="fas fa-link text-blue-600 mr-2"></i>
-                            <h3 class="font-semibold text-gray-800">Agente MCP</h3>
+                            <h3 class="font-semibold text-gray-800">Agente MCP Firecrawl</h3>
                         </div>
                         <p class="text-sm text-gray-600 mb-3">
-                            Integração dinâmica com ferramentas externas via Model Context Protocol
+                            Integração dinâmica com ferramentas externas via Model Context Protocol, neste caso Firecrawl
                         </p>
                         <div class="flex flex-wrap gap-1">
                             <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Scraping Real-time</span>
@@ -198,10 +198,10 @@
                          onclick="selectAgent('workflow')" id="workflow-card">
                         <div class="flex items-center mb-2">
                             <i class="fas fa-sitemap text-green-600 mr-2"></i>
-                            <h3 class="font-semibold text-gray-800">Agente Workflow</h3>
+                            <h3 class="font-semibold text-gray-800">Agente Workflow Firecrawl</h3>
                         </div>
                         <p class="text-sm text-gray-600 mb-3">
-                            Pesquisa estruturada e análise comparativa de produtos e serviços
+                            Pesquisa estruturada e análise comparativa de produtos e serviços, neste caso Firecrawl
                         </p>
                         <div class="flex flex-wrap gap-1">
                             <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Workflow Estruturado</span>
@@ -545,8 +545,8 @@
             selectedAgentDiv.classList.remove('hidden');
             
             const agentNames = {
-                'mcp': 'Agente MCP',
-                'workflow': 'Agente Workflow',
+                'mcp': 'Agente MCP Firecrawl',
+                'workflow': 'Agente Workflow Firecrawl',
                 'rag': 'Agente RAG',
                 'externo': 'Agente Externo',
                 'mermaid': 'Tool Mermaid Agent'
@@ -564,13 +564,17 @@
                 knowledgeBtn.classList.remove('hidden');
                 loadKnowledgeStats();
                 updateInputHint('Faça perguntas baseadas na base de conhecimento...');
-            } else if (agentType === 'externo') {
-                externoBtn.classList.remove('hidden');
-                updateInputHint('Envie prompts para processamento via Flowise...');
             } else if (agentType === 'mermaid') {
                 mermaidBtn.classList.remove('hidden');
                 loadDiagramTypes();
-                updateInputHint('Descreva o diagrama que deseja criar...');
+                updateInputHint('Descreva o diagrama que deseja criar e processo que precisa ser estruturado...');
+            } else if (agentType === 'externo') {
+                externoBtn.classList.remove('hidden');
+                updateInputHint('Envie prompts para processamento via API para o Flowise...');
+            } else if (agentType === 'mcp') {
+                updateInputHint(`Pergunte algo para o ${agentNames[agentType]}, p.e., "me traga o top 5 smartphones"...`);
+            } else if (agentType === 'workflow') {
+                updateInputHint(`Pergunte algo para o ${agentNames[agentType]}, p.e., "compare os esrviços das cloud platforms"...`);
             } else {
                 updateInputHint(`Pergunte algo para o ${agentNames[agentType]}...`);
             }
@@ -1071,7 +1075,7 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    alert('✅ Conexão testada com sucesso!\nResposta: ' + data.response.substring(0, 100) + '...');
+                    alert('✅ Conexão testada com sucesso!');
                 } else {
                     alert('❌ Falha no teste de conexão:\n' + data.response);
                 }
