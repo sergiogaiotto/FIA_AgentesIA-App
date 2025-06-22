@@ -1,4 +1,4 @@
-# requirements.txt - Comentado Linha a Linha
+# requirements.txt - Comentado Linha a Linha (Atualizado com Pinecone)
 
 firecrawl-py==2.8.0
 # SDK oficial Python para API Firecrawl
@@ -72,3 +72,34 @@ jinja2==3.1.4
 # Usado pelo FastAPI para servir páginas HTML (index.html)
 # Funcionalidades: template inheritance, filters, macros
 # Integração nativa com FastAPI templates
+
+# === NOVAS DEPENDÊNCIAS PARA RAG ===
+
+pinecone-client==5.0.1
+# SDK oficial Python para Pinecone vector database
+# Versão 5.0.1: versão mais recente e estável
+# Pinecone: serviço de vector database serverless
+# Funcionalidades: indexação, busca semântica, escalabilidade automática
+# Usado pelo RAGAgent para armazenar e buscar embeddings
+# Suporta: create_index, upsert, query, delete
+
+langchain-pinecone==0.2.0
+# Integração específica LangChain com Pinecone
+# Versão 0.2.0: compatível com langchain==0.3.7 e pinecone-client==5.0.1
+# Funcionalidades: PineconeVectorStore, índice automático
+# Abstração de alto nível para operações de vector store
+# Usado pelo RAGAgent para integração seamless
+
+langchain-community==0.3.1
+# Coleção de integrações LangChain com serviços externos
+# Versão 0.3.1: compatível com langchain==0.3.7
+# Inclui: vector stores, text splitters, document loaders
+# Usado pelo RAGAgent para RecursiveCharacterTextSplitter
+# Ampla coleção de ferramentas para RAG workflows
+
+langchain-text-splitters==0.3.0
+# Componentes específicos para divisão de texto
+# Versão 0.3.0: separado do core para modularidade
+# Funcionalidades: RecursiveCharacterTextSplitter, chunk strategies
+# Usado pelo RAGAgent para preparar documentos para indexação
+# Otimizações: preserva contexto semântico, overlap configurável
