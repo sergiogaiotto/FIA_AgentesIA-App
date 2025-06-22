@@ -37,6 +37,35 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        .rag-sources {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+        .confidence-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            transition: width 0.3s ease;
+        }
+        .knowledge-panel {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .knowledge-panel.show {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -64,7 +93,7 @@
                 <h2 class="text-lg font-semibold mb-3 text-gray-800">
                     <i class="fas fa-cogs mr-2"></i>Selecione o Agente
                 </h2>
-                <div class="grid md:grid-cols-2 gap-4">
+                <div class="grid md:grid-cols-3 gap-4">
                     <!-- MCP Agent -->
                     <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md" 
                          onclick="selectAgent('mcp')" id="mcp-card">
@@ -98,14 +127,94 @@
                             <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Recomendações</span>
                         </div>
                     </div>
+
+                    <!-- RAG Agent -->
+                    <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md"
+                         onclick="selectAgent('rag')" id="rag-card">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-brain text-purple-600 mr-2"></i>
+                            <h3 class="font-semibold text-gray-800">Agente RAG</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Retrieval-Augmented Generation com base de conhecimento Pinecone
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Pesquisa Semântica</span>
+                            <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">Base Conhecimento</span>
+                            <span class="px-2 py-1 bg-pink-100 text-pink-800 text-xs rounded">Citação Fontes</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Selected Agent Display -->
                 <div id="selected-agent" class="mt-4 p-3 bg-blue-50 rounded-lg hidden">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                        <span class="font-medium">Agente selecionado: </span>
-                        <span id="selected-agent-name" class="font-bold text-blue-600"></span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                            <span class="font-medium">Agente selecionado: </span>
+                            <span id="selected-agent-name" class="font-bold text-blue-600"></span>
+                        </div>
+                        <!-- RAG Knowledge Management Button -->
+                        <button id="knowledge-btn" class="hidden bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors" onclick="toggleKnowledgePanel()">
+                            <i class="fas fa-database mr-1"></i>Gerenciar Base
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RAG Knowledge Management Panel -->
+                <div id="knowledge-panel" class="knowledge-panel">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-800">
+                        <i class="fas fa-database mr-2"></i>Gerenciamento da Base de Conhecimento
+                    </h3>
+                    
+                    <!-- Knowledge Stats -->
+                    <div id="knowledge-stats" class="bg-gray-50 rounded p-3 mb-4">
+                        <div class="text-sm text-gray-600">Carregando estatísticas...</div>
+                    </div>
+
+                    <!-- Add Knowledge Forms -->
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <!-- Add from URL -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-medium mb-2">Adicionar via URL</h4>
+                            <div class="space-y-2">
+                                <input type="url" id="knowledge-url" placeholder="https://exemplo.com/artigo" 
+                                       class="w-full border rounded px-3 py-2 text-sm">
+                                <button onclick="addKnowledgeFromURL()" 
+                                        class="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">
+                                    <i class="fas fa-globe mr-1"></i>Adicionar URL
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Add from Text -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-medium mb-2">Adicionar Texto</h4>
+                            <div class="space-y-2">
+                                <input type="text" id="knowledge-source" placeholder="ID da fonte" 
+                                       class="w-full border rounded px-3 py-2 text-sm">
+                                <textarea id="knowledge-text" placeholder="Cole o texto aqui..." 
+                                          class="w-full border rounded px-3 py-2 text-sm h-20 resize-none"></textarea>
+                                <button onclick="addKnowledgeFromText()" 
+                                        class="w-full bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700">
+                                    <i class="fas fa-file-text mr-1"></i>Adicionar Texto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Sources -->
+                    <div class="border-t pt-4">
+                        <h4 class="font-medium mb-2">Sugestões de Fontes</h4>
+                        <div class="flex space-x-2 mb-2">
+                            <input type="text" id="suggest-domain" placeholder="Ex: machine learning" 
+                                   class="flex-1 border rounded px-3 py-2 text-sm">
+                            <button onclick="suggestSources()" 
+                                    class="bg-yellow-600 text-white px-4 py-2 rounded text-sm hover:bg-yellow-700">
+                                <i class="fas fa-lightbulb mr-1"></i>Sugerir
+                            </button>
+                        </div>
+                        <div id="suggested-sources" class="text-sm text-gray-600"></div>
                     </div>
                 </div>
             </div>
@@ -132,7 +241,7 @@
                     <div class="flex items-start space-x-2">
                         <i class="fas fa-robot text-blue-600 mt-1"></i>
                         <div>
-                            <p class="text-sm">Olá! Selecione um agente acima e me faça uma pergunta sobre produtos, ferramentas ou serviços.</p>
+                            <p class="text-sm">Olá! Selecione um agente acima e me faça uma pergunta.</p>
                             <div class="text-xs text-gray-500 mt-1">
                                 <i class="fas fa-clock mr-1"></i>Sistema iniciado
                             </div>
@@ -169,7 +278,7 @@
                 </div>
                 <div class="text-xs text-gray-500 mt-2">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Exemplos: "Melhores ferramentas de chatbot de IA no Brasil", "Comparar preços de CRM"
+                    <span id="input-hint">Selecione um agente primeiro</span>
                 </div>
             </div>
         </div>
@@ -195,13 +304,36 @@
             // Show selected agent
             const selectedAgentDiv = document.getElementById('selected-agent');
             const selectedAgentName = document.getElementById('selected-agent-name');
+            const knowledgeBtn = document.getElementById('knowledge-btn');
             
             selectedAgentDiv.classList.remove('hidden');
-            selectedAgentName.textContent = agentType === 'mcp' ? 'Agente MCP' : 'Agente Workflow';
+            
+            const agentNames = {
+                'mcp': 'Agente MCP',
+                'workflow': 'Agente Workflow',
+                'rag': 'Agente RAG'
+            };
+            
+            selectedAgentName.textContent = agentNames[agentType];
+            
+            // Show knowledge management button only for RAG agent
+            if (agentType === 'rag') {
+                knowledgeBtn.classList.remove('hidden');
+                loadKnowledgeStats();
+                updateInputHint('Faça perguntas baseadas na base de conhecimento...');
+            } else {
+                knowledgeBtn.classList.add('hidden');
+                document.getElementById('knowledge-panel').classList.remove('show');
+                updateInputHint(`Pergunte algo para o ${agentNames[agentType]}...`);
+            }
             
             // Enable input
             document.getElementById('message-input').placeholder = 
-                `Pergunte algo para o ${agentType === 'mcp' ? 'Agente MCP' : 'Agente Workflow'}...`;
+                `Pergunte algo para o ${agentNames[agentType]}...`;
+        }
+
+        function updateInputHint(text) {
+            document.getElementById('input-hint').textContent = text;
         }
 
         function handleKeyPress(event) {
@@ -247,8 +379,8 @@
                 // Hide typing indicator
                 hideTypingIndicator();
                 
-                // Add bot response
-                addMessage(data.response, 'bot', data.status);
+                // Add bot response with special handling for RAG
+                addMessage(data.response, 'bot', data.status, data);
                 
             } catch (error) {
                 hideTypingIndicator();
@@ -258,7 +390,7 @@
             }
         }
 
-        function addMessage(content, sender, status = 'success') {
+        function addMessage(content, sender, status = 'success', data = null) {
             const chatMessages = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
             
@@ -267,13 +399,64 @@
             const icon = isUser ? 'fas fa-user' : 'fas fa-robot';
             const iconColor = isUser ? 'text-white' : (status === 'error' ? 'text-red-600' : 'text-blue-600');
             
+            let ragExtras = '';
+            
+            // Add RAG-specific elements
+            if (!isUser && selectedAgent === 'rag' && data && status === 'success') {
+                // Confidence bar
+                if (data.confidence !== null && data.confidence !== undefined) {
+                    const confidencePercent = Math.round(data.confidence * 100);
+                    ragExtras += `
+                        <div class="mt-2">
+                            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                <span>Confiança da resposta</span>
+                                <span>${confidencePercent}%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Sources
+                if (data.sources && data.sources.length > 0) {
+                    ragExtras += `
+                        <div class="rag-sources mt-3">
+                            <div class="font-medium text-sm text-gray-700 mb-2">
+                                <i class="fas fa-book mr-1"></i>Fontes utilizadas (${data.sources.length}):
+                            </div>
+                            <div class="space-y-2">
+                    `;
+                    
+                    data.sources.forEach((source, index) => {
+                        const score = source.score ? `${Math.round(source.score * 100)}%` : 'N/A';
+                        const sourceUrl = source.metadata.source_url || source.metadata.source_id || 'Fonte interna';
+                        
+                        ragExtras += `
+                            <div class="text-xs bg-white p-2 rounded border-l-2 border-blue-400">
+                                <div class="font-medium text-gray-700">${index + 1}. ${sourceUrl}</div>
+                                <div class="text-gray-600 mt-1">${source.content}</div>
+                                <div class="text-gray-500 mt-1">Similaridade: ${score}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    ragExtras += `
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
             messageDiv.className = `message-bubble ${bubbleClass} rounded-lg p-3 shadow-sm`;
             messageDiv.innerHTML = `
                 <div class="flex items-start space-x-2">
                     <i class="${icon} ${iconColor} mt-1"></i>
                     <div class="flex-1">
                         <div class="whitespace-pre-wrap">${formatMessage(content)}</div>
-                        <div class="text-xs ${isUser ? 'text-blue-100' : 'text-gray-500'} mt-1">
+                        ${ragExtras}
+                        <div class="text-xs ${isUser ? 'text-blue-100' : 'text-gray-500'} mt-2">
                             <i class="fas fa-clock mr-1"></i>${new Date().toLocaleTimeString()}
                         </div>
                     </div>
@@ -318,6 +501,174 @@
                     </div>
                 </div>
             `;
+        }
+
+        // RAG Knowledge Management Functions
+        function toggleKnowledgePanel() {
+            const panel = document.getElementById('knowledge-panel');
+            panel.classList.toggle('show');
+            
+            if (panel.classList.contains('show')) {
+                loadKnowledgeStats();
+            }
+        }
+
+        async function loadKnowledgeStats() {
+            try {
+                const response = await fetch('/rag/stats');
+                const stats = await response.json();
+                
+                const statsDiv = document.getElementById('knowledge-stats');
+                
+                if (stats.knowledge_base && stats.knowledge_base.total_vectors !== undefined) {
+                    statsDiv.innerHTML = `
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium">Documentos Indexados</div>
+                                <div class="text-lg font-bold text-blue-600">${stats.knowledge_base.total_vectors || 0}</div>
+                            </div>
+                            <div>
+                                <div class="font-medium">Status do Índice</div>
+                                <div class="text-lg font-bold text-green-600">${stats.knowledge_base.status}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    statsDiv.innerHTML = `
+                        <div class="text-center text-yellow-600">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Base de conhecimento não inicializada
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('knowledge-stats').innerHTML = `
+                    <div class="text-center text-red-600">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Erro ao carregar estatísticas
+                    </div>
+                `;
+            }
+        }
+
+        async function addKnowledgeFromURL() {
+            const url = document.getElementById('knowledge-url').value.trim();
+            
+            if (!url) {
+                alert('Por favor, insira uma URL válida');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/rag/knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('✅ Conhecimento adicionado com sucesso!');
+                    document.getElementById('knowledge-url').value = '';
+                    loadKnowledgeStats();
+                } else {
+                    alert('❌ Erro: ' + result.message);
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        async function addKnowledgeFromText() {
+            const text = document.getElementById('knowledge-text').value.trim();
+            const sourceId = document.getElementById('knowledge-source').value.trim();
+            
+            if (!text || !sourceId) {
+                alert('Por favor, preencha o texto e o ID da fonte');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/rag/knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: text,
+                        source_id: sourceId 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('✅ Texto adicionado com sucesso!');
+                    document.getElementById('knowledge-text').value = '';
+                    document.getElementById('knowledge-source').value = '';
+                    loadKnowledgeStats();
+                } else {
+                    alert('❌ Erro: ' + result.message);
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        async function suggestSources() {
+            const domain = document.getElementById('suggest-domain').value.trim();
+            
+            if (!domain) {
+                alert('Por favor, insira um domínio de conhecimento');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/rag/suggest-sources/${encodeURIComponent(domain)}`);
+                const result = await response.json();
+                
+                const suggestedDiv = document.getElementById('suggested-sources');
+                
+                if (result.suggested_sources && result.suggested_sources.length > 0) {
+                    const sourcesList = result.suggested_sources.map(url => 
+                        `<div class="flex items-center justify-between bg-gray-50 p-2 rounded mb-1">
+                            <span class="text-xs flex-1 mr-2">${url}</span>
+                            <button onclick="addSuggestedSource('${url}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">
+                                Adicionar
+                            </button>
+                        </div>`
+                    ).join('');
+                    
+                    suggestedDiv.innerHTML = `
+                        <div class="mb-2 font-medium">Fontes sugeridas para "${domain}":</div>
+                        ${sourcesList}
+                    `;
+                } else {
+                    suggestedDiv.innerHTML = `
+                        <div class="text-yellow-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Nenhuma fonte encontrada para "${domain}"
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('suggested-sources').innerHTML = `
+                    <div class="text-red-600">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Erro ao buscar sugestões
+                    </div>
+                `;
+            }
+        }
+
+        function addSuggestedSource(url) {
+            document.getElementById('knowledge-url').value = url;
+            // Scroll to URL input
+            document.getElementById('knowledge-url').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('knowledge-url').focus();
         }
 
         // Initialize
