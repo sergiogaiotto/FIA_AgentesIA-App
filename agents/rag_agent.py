@@ -115,7 +115,7 @@ class PineconeService:
     # Service class: encapsula operações do Pinecone
     # Abstração: isola complexidade da API Pinecone
     
-    def __init__(self, index_name: str = "rag-knowledge-base"):
+    def __init__(self, index_name: str = "fiagente"):
         """Inicializa serviço Pinecone"""
         # index_name: nome do índice no Pinecone
         # Default: nome descritivo para base de conhecimento
