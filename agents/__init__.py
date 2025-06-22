@@ -4,10 +4,10 @@
 # Comentário descritivo do propósito do módulo
 # Define o domínio: agentes de IA especializados em pesquisa e análise
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 # Versionamento semântico do módulo
 # Formato: MAJOR.MINOR.PATCH
-# 1.0.0 indica primeira versão estável
+# 1.1.0 indica adição de nova funcionalidade (RAG Agent)
 # Usado para controle de compatibilidade e releases
 
 __author__ = "FIA.LabData - Prof Sergio Gaiotto"
@@ -26,9 +26,15 @@ from .workflow_agent import WorkflowAgent
 # WorkflowAgent: classe para agente com fluxo estruturado
 # Design pattern: cada tipo de agente implementa interface comum
 
-__all__ = ["MCPAgent", "WorkflowAgent"]
+from .rag_agent import RAGAgent
+# Importação relativa do agente RAG
+# RAGAgent: classe para Retrieval-Augmented Generation
+# Nova funcionalidade: pesquisa semântica com Pinecone
+
+__all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent"]
 # Lista explícita de símbolos públicos do módulo
 # Controla o que é importado com "from agents import *"
 # Best practice: define API pública explicitamente
 # Evita importação acidental de símbolos internos
 # Documentação implícita das classes principais disponíveis
+# Atualizado para incluir RAGAgent na API pública
