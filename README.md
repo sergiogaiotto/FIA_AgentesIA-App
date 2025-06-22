@@ -1,11 +1,11 @@
-# Agentes de IA - FIA, Peof Sergio Gaiotto
+# Agentes de IA - FIA, Prof. Sergio Gaiotto
 
-Plataforma avançada com **cinco agentes especializados** em pesquisa, análise, RAG, integrações externas e geração de diagramas, desenvolvida para demonstrar diferentes abordagens de IA aplicada.
+Plataforma avançada com **seis agentes especializados** em pesquisa, análise, RAG, integrações externas, geração de diagramas e análise de imagens, desenvolvida para demonstrar diferentes abordagens de IA aplicada.
 
-![Agentes de IA](https://img.shields.io/badge/Agentes-5-blue)
+![Agentes de IA](https://img.shields.io/badge/Agentes-6-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115.4-green)
 ![Python](https://img.shields.io/badge/Python-3.11+-brightgreen)
-![Version](https://img.shields.io/badge/Version-1.3.0-orange)
+![Version](https://img.shields.io/badge/Version-1.4.0-orange)
 
 ## 🤖 Agentes Disponíveis
 
@@ -52,6 +52,17 @@ Plataforma avançada com **cinco agentes especializados** em pesquisa, análise,
   - Explicações detalhadas dos diagramas
   - Sugestões de melhorias
   - Histórico de diagramas gerados
+
+### 6. **ClassificaImagem Agent**
+- **Especialidade**: Análise visual de imagens com foco em marketing
+- **Tecnologia**: LlamaIndex + GPT-4 Vision
+- **Funcionalidades**:
+  - Detecção e classificação de objetos
+  - Análise de paleta de cores e harmonia
+  - Insights de marketing e público-alvo
+  - Análise de composição visual
+  - Retorno estruturado em JSON
+  - Sugestões de melhorias
 
 ## 🚀 Instalação e Configuração
 
@@ -108,7 +119,7 @@ PORT=8000
 ENVIRONMENT=development
 ```
 
-**Nota**: O Agente Externo e Tool Mermaid não requerem configurações específicas de chaves de API além da OpenAI.
+**Nota**: Os agentes Externo, Tool Mermaid e ClassificaImagem não requerem configurações específicas além da OpenAI.
 
 ## 🎯 Como Usar
 
@@ -121,12 +132,13 @@ A aplicação estará disponível em: `http://localhost:8000`
 
 ### Interface Web
 
-1. **Seleção de Agente**: Escolha um dos cinco agentes disponíveis
+1. **Seleção de Agente**: Escolha um dos seis agentes disponíveis
 2. **Chat Interativo**: Faça perguntas naturalmente
 3. **Recursos Especiais**:
    - **RAG Agent**: Painel de gestão da base de conhecimento
    - **Agente Externo**: Painel de status e configuração da API
    - **Tool Mermaid**: Painel de tipos de diagrama e histórico
+   - **ClassificaImagem**: Painel de tipos de análise e histórico
    - **Todas**: Indicadores visuais de progresso
 
 ## 🎨 Usando o Tool Mermaid Agent
@@ -236,43 +248,104 @@ await rag_agent.add_knowledge_from_text(
 "Melhores práticas para tratamento de exceções"
 ```
 
-## 📊 Comparação dos Agentes
+## 🖼️ Usando o ClassificaImagem Agent
 
-| Recurso | MCP | Workflow | RAG | Externo | Mermaid |
-|---------|-----|----------|-----|---------|---------|
-| **Tempo Real** | ✅ | ✅ | ❌ | ✅ | ✅ |
-| **Memória Persistente** | ❌ | ❌ | ✅ | ✅* | ✅** |
-| **Fontes Citadas** | ❌ | ✅ | ✅ | ❌ | ❌ |
-| **Análise Estruturada** | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Pesquisa Semântica** | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Base Customizável** | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **APIs Externas** | ✅ | ❌ | ❌ | ✅ | ❌ |
-| **Contexto Conversacional** | ✅ | ❌ | ❌ | ✅ | ❌ |
-| **Geração Visual** | ❌ | ❌ | ❌ | ❌ | ✅ |
+### Funcionalidades Principais
 
-*\* Contexto mantido durante a sessão*
-*\** Histórico de diagramas gerados*
+O ClassificaImagem Agent permite análise visual completa de imagens usando GPT-4 Vision via LlamaIndex:
+
+#### Tipos de Análise Suportados
+```
+"Analise esta imagem completa: https://exemplo.com/imagem.jpg"
+"Detecte objetos nesta imagem: https://exemplo.com/produto.png" 
+"Analise as cores desta imagem: https://exemplo.com/design.jpg"
+"Que insights de marketing: https://exemplo.com/anuncio.png"
+```
+
+#### Interface Especializada
+1. Selecione "ClassificaImagem Agent"
+2. Clique em "Análise & Histórico"
+3. Escolha o tipo de análise:
+   - **Completa**: Análise visual completa
+   - **Objetos**: Foco em detecção de objetos
+   - **Cores**: Análise de paleta e harmonia
+   - **Marketing**: Insights estratégicos
+4. Cole URL da imagem no chat
+5. Receba análise detalhada em JSON
+
+### Recursos Avançados
+- **Detecção de Objetos**: Identifica e classifica objetos com nível de confiança
+- **Análise de Cores**: Paleta dominante, harmonia e impacto psicológico
+- **Insights de Marketing**: Público-alvo, posicionamento, apelo emocional
+- **Composição Visual**: Análise técnica da imagem
+- **JSON Estruturado**: Dados estruturados para integração
+- **Histórico Persistente**: Todas as análises são salvas
+
+### Exemplos de Uso
+
+#### Análise de Produto para E-commerce
+```
+"Analise esta imagem de produto para estratégia de marketing: https://loja.com/produto.jpg"
+```
+
+**Retorno esperado**:
+- Objetos detectados no produto
+- Paleta de cores e harmonia
+- Público-alvo sugerido
+- Sugestões de posicionamento
+- Canais de marketing recomendados
+
+#### Análise de Design/Logo
+```
+"Que insights de marketing esta imagem transmite: https://empresa.com/logo.png"
+```
+
+**Retorno esperado**:
+- Análise visual do design
+- Impacto das cores escolhidas
+- Posicionamento de marca sugerido
+- Apelo emocional identificado
+
+## 🎨 Comparação dos Agentes
+
+| Recurso | MCP | Workflow | RAG | Externo | Mermaid | ClassificaImagem |
+|---------|-----|----------|-----|---------|---------|------------------|
+| **Tempo Real** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Memória Persistente** | ❌ | ❌ | ✅ | ✅* | ✅** | ✅*** |
+| **Fontes Citadas** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅**** |
+| **Análise Estruturada** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| **Entrada Visual** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Saída JSON** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **APIs Externas** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Contexto Conversacional** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Geração Visual** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+
+*\* Contexto mantido durante a sessão*  
+*\** Histórico de diagramas gerados*  
+*\*** Histórico de análises de imagem*  
+*\**** Análise de origem da imagem*
 
 ## 🛠️ Estrutura do Projeto
 
 ```
 FIA_AgentesIA/
 ├── agents/
-│   ├── __init__.py          # Exports dos agentes
-│   ├── mcp_agent.py         # Agente MCP
-│   ├── workflow_agent.py    # Agente Workflow  
-│   ├── rag_agent.py         # Agente RAG
-│   ├── externo_agent.py     # Agente Externo
-│   └── tool_mermaid_agent.py # Tool Mermaid Agent
+│   ├── __init__.py                 # Exports dos agentes
+│   ├── mcp_agent.py               # Agente MCP
+│   ├── workflow_agent.py          # Agente Workflow  
+│   ├── rag_agent.py               # Agente RAG
+│   ├── externo_agent.py           # Agente Externo
+│   ├── tool_mermaid_agent.py      # Tool Mermaid Agent
+│   └── classifica_imagem_agent.py # ClassificaImagem Agent
 ├── pages/
-│   └── index.html           # Interface web atualizada
+│   └── index.html                 # Interface web atualizada
 ├── static/
-│   ├── style.css           # Estilos
-│   └── script.js           # JavaScript
-├── app.py                  # FastAPI server
-├── requirements.txt        # Dependências Python
-├── render.yaml            # Configuração deploy
-└── README.md              # Este arquivo
+│   ├── style.css                 # Estilos
+│   └── script.js                 # JavaScript
+├── app.py                        # FastAPI server
+├── requirements.txt              # Dependências Python
+├── render.yaml                   # Configuração deploy
+└── README.md                     # Este arquivo
 ```
 
 ## 🌐 Deploy no Render
@@ -299,7 +372,7 @@ OPENAI_API_KEY=sk-your-openai-key
 FIRECRAWL_API_KEY=fc-your-firecrawl-key  
 PINECONE_API_KEY=your-pinecone-key
 
-# Agentes Externo e Mermaid funcionam apenas com OpenAI
+# Agentes Externo, Mermaid e ClassificaImagem funcionam apenas com OpenAI
 ```
 
 ## 🔧 APIs Disponíveis
@@ -309,6 +382,11 @@ PINECONE_API_KEY=your-pinecone-key
 - `POST /chat/stream` - Streaming de respostas
 - `GET /agents/info` - Informações dos agentes
 - `GET /health` - Health check
+
+### Endpoints ClassificaImagem Específicos ⭐
+- `POST /imagem/analyze` - Análise detalhada de imagem
+- `GET /imagem/history` - Histórico de análises
+- `POST /imagem/reset` - Reset histórico
 
 ### Endpoints RAG Específicos
 - `POST /rag/knowledge` - Adicionar conhecimento
@@ -323,79 +401,6 @@ PINECONE_API_KEY=your-pinecone-key
 - `GET /mermaid/diagram-types` - Tipos de diagrama suportados
 - `GET /mermaid/history` - Histórico de diagramas
 - `POST /mermaid/reset` - Reset histórico
-
-### Exemplo de Uso da API
-
-```python
-import requests
-
-# Chat com Tool Mermaid Agent
-response = requests.post("http://localhost:8000/chat", json={
-    "message": "Crie um diagrama de sequência para autenticação de usuário",
-    "agent_type": "mermaid",
-    "diagram_type": "sequence"
-})
-
-result = response.json()
-print(f"Resposta: {result['response']}")
-print(f"Status: {result['status']}")
-
-# Verificar tipos de diagrama suportados
-diagram_types = requests.get("http://localhost:8000/mermaid/diagram-types")
-print(f"Tipos disponíveis: {diagram_types.json()}")
-
-# Chat com Agente Externo
-response = requests.post("http://localhost:8000/chat", json={
-    "message": "Explique machine learning de forma simples",
-    "agent_type": "externo"
-})
-
-result = response.json()
-print(f"Resposta: {result['response']}")
-print(f"Status: {result['status']}")
-
-# Verificar status do Agente Externo
-status = requests.get("http://localhost:8000/externo/status")
-print(f"Status API: {status.json()}")
-```
-
-## 📈 Monitoramento e Estatísticas
-
-### Métricas do RAG Agent
-- Total de documentos indexados
-- Status do índice Pinecone
-- Distribuição de scores de confiança
-- Fontes mais utilizadas
-
-### Métricas do Agente Externo
-- Status de conectividade com Flowise
-- Quantidade de mensagens na sessão
-- Tempo de resposta da API
-- Histórico conversacional
-
-### Métricas do Tool Mermaid Agent
-- Diagramas gerados na sessão
-- Tipos de diagrama mais utilizados
-- Histórico de criação
-- Complexidade dos diagramas
-
-### Health Checks
-```bash
-# Verificar status geral
-curl http://localhost:8000/health
-
-# Estatísticas RAG
-curl http://localhost:8000/rag/stats
-
-# Status Agente Externo
-curl http://localhost:8000/externo/status
-
-# Tipos de diagrama Mermaid
-curl http://localhost:8000/mermaid/diagram-types
-
-# Histórico de diagramas
-curl http://localhost:8000/mermaid/history
-```
 
 ## 🎓 Casos de Uso
 
@@ -427,67 +432,28 @@ curl http://localhost:8000/mermaid/history
 - Análise avançada de linguagem natural
 - Prototipagem rápida com APIs externas
 
-## 🚨 Troubleshooting
 
-### Problemas Comuns
+## 📈 Casos de Uso do ClassificaImagem
 
-#### RAG Agent não inicializa
-```bash
-# Verificar chave Pinecone
-echo $PINECONE_API_KEY
+### E-commerce e Produtos
+- **Análise de Fotos de Produto**: Otimização para conversão
+- **Competição Visual**: Análise de produtos concorrentes
+- **Categorização Automática**: Classificação de inventário
 
-# Verificar conectividade
-curl -H "Api-Key: $PINECONE_API_KEY" \
-     https://api.pinecone.io/indexes
-```
+### Marketing e Design
+- **Campanhas Publicitárias**: Análise de efetividade visual
+- **Brand Guidelines**: Consistência de cores e estilo
+- **A/B Testing Visual**: Comparação de designs
 
-#### MCP Agent falha
-```bash
-# Verificar instalação Node.js
-npm list -g firecrawl-mcp
+### Análise de Conteúdo
+- **Social Media**: Análise de engagement visual
+- **User Generated Content**: Classificação automática
+- **Moderação de Conteúdo**: Detecção de elementos
 
-# Reinstalar se necessário
-npm install -g firecrawl-mcp
-```
-
-#### Workflow Agent sem resultados
-- Verificar chave Firecrawl válida
-- Confirmar conectividade de rede
-- Testar com queries mais específicas
-
-#### Tool Mermaid Agent sem resposta
-- Verificar chave OpenAI válida
-- Confirmar que agente foi inicializado
-- Testar com prompts simples:
-  ```bash
-  curl -X POST http://localhost:8000/chat \
-       -H "Content-Type: application/json" \
-       -d '{"message": "Crie um diagrama simples", "agent_type": "mermaid", "diagram_type": "flowchart"}'
-  ```
-- Verificar tipos de diagrama suportados
-- Usar painel de controle na interface web
-
-#### Agente Externo não responde
-- Verificar conectividade com internet
-- Testar endpoint Flowise manualmente:
-  ```bash
-  curl -X POST https://gaiotto-flowiseai.hf.space/api/v1/prediction/126dd353-3c69-4304-9542-1263d07c711a \
-       -H "Content-Type: application/json" \
-       -d '{"question": "test"}'
-  ```
-- Usar painel de status na interface web
-
-### Problemas de Performance
-
-#### Aplicação lenta
-- Verificar logs do console
-- Monitorar uso de CPU/RAM
-- Verificar conectividade com APIs externas
-
-#### Respostas demoradas
-- Verificar timeouts nas APIs
-- Considerar usar endpoints de streaming
-- Verificar quality of service das APIs
+### Insights Estratégicos
+- **Pesquisa de Mercado**: Análise visual de tendências
+- **Posicionamento de Marca**: Análise competitiva visual
+- **Público-Alvo**: Segmentação baseada em preferências visuais
 
 ## 📝 Licença
 
@@ -503,9 +469,19 @@ MIT License - veja LICENSE para detalhes.
 
 ## 🔄 Atualizações Recentes
 
+### v1.4.0 - ClassificaImagem Agent ⭐ **NOVO**
+- ✅ Novo ClassificaImagem Agent para análise visual
+- ✅ Integração com LlamaIndex + GPT-4 Vision
+- ✅ Análise de objetos, cores e insights de marketing
+- ✅ Retorno estruturado em JSON
+- ✅ Interface especializada com tipos de análise
+- ✅ Histórico de análises persistente
+- ✅ Funções de download e cópia de dados
+- ✅ Exemplos de prompts prontos
+
 ### v1.3.0 - Tool Mermaid Agent
 - ✅ Novo Tool Mermaid Agent para geração de diagramas
-- ✅ Suporte a múltiplos tipos de diagrama (sequence, flowchart, class, etc.)
+- ✅ Suporte a múltiplos tipos de diagrama
 - ✅ Interface especializada com seletor de tipos
 - ✅ Histórico de diagramas gerados
 - ✅ Exemplos de prompts prontos
@@ -520,6 +496,7 @@ MIT License - veja LICENSE para detalhes.
 - ✅ Monitoramento de conectividade
 - ✅ Interface atualizada com 4 agentes
 
+
 ### v1.1.0 - Agente RAG
 - ✅ Novo Agente RAG com Pinecone
 - ✅ Interface de gestão de conhecimento
@@ -527,16 +504,10 @@ MIT License - veja LICENSE para detalhes.
 - ✅ APIs específicas para RAG
 - ✅ Documentação atualizada
 
-### v1.0.0 - Versão Inicial
-- ✅ Agente MCP com Model Context Protocol
-- ✅ Agente Workflow com LangGraph
-- ✅ Interface web responsiva
-- ✅ Deploy automatizado no Render
 
 ## 🆘 Suporte
 
 ### Documentação Adicional
-- **Exemplos Mermaid**: `TOOL_MERMAID_EXAMPLES.md`
 - **Configuração Ambiente**: `.env.example`
 - **Deploy**: `render.yaml`
 
@@ -547,19 +518,21 @@ MIT License - veja LICENSE para detalhes.
 
 ### Recursos Externos
 - **OpenAI Documentation**: https://docs.openai.com/
+- **LlamaIndex Documentation**: https://docs.llamaindex.ai/
+- **GPT-4 Vision Guide**: https://platform.openai.com/docs/guides/vision
 - **Firecrawl Documentation**: https://docs.firecrawl.dev/
 - **Pinecone Documentation**: https://docs.pinecone.io/
 - **Mermaid Documentation**: https://mermaid.js.org/
-
 ---
 
-**🚀 Experimente os cinco agentes e descubra diferentes abordagens para IA aplicada!**
+**🚀 Experimente os seis agentes e descubra diferentes abordagens para IA aplicada!**
 
 ---
 
 ## ⭐ Features em Destaque
 
-- 🤖 **5 Agentes Especializados** - Cada um com propósito específico
+- 🤖 **6 Agentes Especializados** - Cada um com propósito específico
+- 🖼️ **Análise Visual Avançada** - GPT-4 Vision + LlamaIndex ⭐
 - 🎨 **Interface Moderna** - Design responsivo e intuitivo
 - 🔧 **APIs RESTful** - Integração fácil com outros sistemas
 - 📊 **Monitoramento** - Health checks e métricas detalhadas
@@ -568,4 +541,4 @@ MIT License - veja LICENSE para detalhes.
 - 🔒 **Configuração Segura** - Chaves API isoladas por ambiente
 - 🌐 **Multi-plataforma** - Funciona em Windows, Mac e Linux
 
-**💡 Perfeito para aprender, experimentar e aplicar diferentes técnicas de IA!**
+**💡 Perfeito para aprender, experimentar e aplicar diferentes técnicas de IA visual e textual!**
