@@ -370,7 +370,7 @@ class RAGAgent:
         # Serviço de vector database
         
         self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
+            model="gpt-4.1-mini",
             # Modelo otimizado: boa qualidade, custo menor
             temperature=0.0,
             # Baixa temperatura: respostas mais determinísticas
@@ -623,7 +623,7 @@ Por favor, responda baseando-se apenas nas informações fornecidas no contexto.
         return {
             "rag_agent": {
                 "status": "active",
-                "model": "gpt-4o-mini",
+                "model": "gpt-4.1-mini",
                 "embedding_model": "text-embedding-3-small"
             },
             "knowledge_base": pinecone_stats,
