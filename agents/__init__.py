@@ -31,10 +31,20 @@ from .rag_agent import RAGAgent
 # RAGAgent: classe para Retrieval-Augmented Generation
 # Nova funcionalidade: pesquisa semântica com Pinecone
 
-__all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent", "ExternoAgent"]
+from .externo_agent import ExternoAgent
+# Importação relativa do agente Externo
+# ExternoAgent: classe para integração com APIs externas (Flowise)
+# Nova funcionalidade: processamento via APIs externas
+
+from .tool_mermaid_agent import ToolMermaidAgent
+# Importação relativa do agente Tool Mermaid
+# ToolMermaidAgent: classe para geração de diagramas Mermaid
+# Nova funcionalidade: criação de diagramas via MCP
+
+__all__ = ["MCPAgent", "WorkflowAgent", "RAGAgent", "ExternoAgent", "ToolMermaidAgent"]
 # Lista explícita de símbolos públicos do módulo
 # Controla o que é importado com "from agents import *"
 # Best practice: define API pública explicitamente
 # Evita importação acidental de símbolos internos
 # Documentação implícita das classes principais disponíveis
-# RAGAgent na API pública
+# ToolMermaidAgent na API pública

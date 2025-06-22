@@ -1,4 +1,4 @@
-# app.py - Comentado Linha a Linha (Atualizado com Agente Externo)
+# app.py - Arquivo Completo Comentado (Atualizado com Tool Mermaid Agent)
 
 from fastapi import FastAPI, Request, HTTPException
 # FastAPI: framework web moderno para APIs Python
@@ -46,17 +46,18 @@ from agents.mcp_agent import MCPAgent
 from agents.workflow_agent import WorkflowAgent
 from agents.rag_agent import RAGAgent
 from agents.externo_agent import ExternoAgent
-# Importação dos quatro tipos de agentes desenvolvidos
+from agents.tool_mermaid_agent import ToolMermaidAgent
+# Importação dos cinco tipos de agentes desenvolvidos
 # Modularização: cada agente em arquivo separado
-# ExternoAgent: novo agente para integração com Flowise
+# ToolMermaidAgent: novo agente para geração de diagramas Mermaid
 
 # Configuração da aplicação FastAPI
 app = FastAPI(
     title="Agentes de IA - FIA",
     # Título da API (aparece na documentação)
-    description="Plataforma com quatro agentes especializados em pesquisa, análise, RAG e integrações externas",
-    # Descrição atualizada para incluir agente externo
-    version="1.2.0"
+    description="Plataforma com cinco agentes especializados em pesquisa, análise, RAG, integrações externas e geração de diagramas",
+    # Descrição atualizada para incluir agente Mermaid
+    version="1.3.0"
     # Versionamento atualizado para nova funcionalidade
 )
 
@@ -76,17 +77,20 @@ mcp_agent = None
 workflow_agent = None
 rag_agent = None
 externo_agent = None
+tool_mermaid_agent = None
 # Variáveis globais para instâncias dos agentes
 # None inicial: agentes serão inicializados no startup
-# externo_agent: nova instância para agente externo
+# tool_mermaid_agent: nova instância para agente de diagramas
 
 class ChatRequest(BaseModel):
     """Modelo para requisições de chat"""
     message: str
     # Mensagem do usuário (campo obrigatório)
-    agent_type: str  # "mcp", "workflow", "rag" ou "externo"
+    agent_type: str  # "mcp", "workflow", "rag", "externo" ou "mermaid"
     # Tipo de agente a ser usado (validação manual)
-    # Atualizado para incluir "externo"
+    # Atualizado para incluir "mermaid"
+    diagram_type: Optional[str] = "sequence"
+    # Tipo de diagrama para agente Mermaid (opcional, padrão sequence)
 
 class ChatResponse(BaseModel):
     """Modelo para respostas de chat"""
@@ -116,10 +120,10 @@ async def initialize_agents():
     # Função assíncrona para setup dos agentes
     # Async: permite inicialização não-bloqueante
     
-    global mcp_agent, workflow_agent, rag_agent, externo_agent
+    global mcp_agent, workflow_agent, rag_agent, externo_agent, tool_mermaid_agent
     # Global: modifica variáveis no escopo global
     # Necessário para compartilhar instâncias entre requests
-    # externo_agent: incluído nas variáveis globais
+    # tool_mermaid_agent: incluído nas variáveis globais
     
     try:
         # Inicializa agente MCP (se chaves estão disponíveis)
@@ -154,6 +158,12 @@ async def initialize_agents():
         # Agente Externo não requer chaves de API específicas
         # Usa API pública do Flowise
         print("✅ Agente Externo inicializado")
+        
+        # Inicializa agente Tool Mermaid (sempre disponível se OpenAI estiver configurado)
+        if os.getenv("OPENAI_API_KEY"):
+            tool_mermaid_agent = ToolMermaidAgent()
+            # Agente Mermaid requer apenas OpenAI para geração
+            print("✅ Tool Mermaid Agent inicializado")
             
     except Exception as e:
         print(f"❌ Erro ao inicializar agentes: {e}")
@@ -269,7 +279,7 @@ async def chat_endpoint(chat_request: ChatRequest):
             )
         
         elif chat_request.agent_type == "externo":
-            # Novo roteamento para agente externo
+            # Roteamento para agente externo
             
             if not externo_agent:
                 return ChatResponse(
@@ -287,9 +297,34 @@ async def chat_endpoint(chat_request: ChatRequest):
                 status="success"
             )
         
+        elif chat_request.agent_type == "mermaid":
+            # Novo roteamento para agente Tool Mermaid
+            
+            if not tool_mermaid_agent:
+                return ChatResponse(
+                    response="❌ Agente Tool Mermaid não está disponível. Verifique a configuração da OpenAI.",
+                    agent_type="mermaid",
+                    status="error"
+                )
+            
+            # Determina tipo de diagrama
+            diagram_type = getattr(chat_request, 'diagram_type', 'sequence')
+            
+            response = await tool_mermaid_agent.process_message(
+                chat_request.message, 
+                diagram_type
+            )
+            # process_message: método específico do ToolMermaidAgent
+            
+            return ChatResponse(
+                response=response,
+                agent_type="mermaid",
+                status="success"
+            )
+        
         else:
             raise HTTPException(status_code=400, detail="Tipo de agente inválido")
-            # Validação: agent_type deve ser "mcp", "workflow", "rag" ou "externo"
+            # Validação: agent_type deve ser "mcp", "workflow", "rag", "externo" ou "mermaid"
             
     except Exception as e:
         return ChatResponse(
@@ -330,6 +365,51 @@ async def externo_reset():
         return {"status": "success", "message": "Conversa resetada com sucesso"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao resetar conversa: {str(e)}")
+
+# Endpoint para listar tipos de diagrama suportados
+@app.get("/mermaid/diagram-types")
+async def get_diagram_types():
+    """Endpoint para listar tipos de diagrama Mermaid suportados"""
+    # Endpoint específico para consultar capacidades do agente Mermaid
+    
+    if not tool_mermaid_agent:
+        raise HTTPException(status_code=503, detail="Agente Tool Mermaid não disponível")
+    
+    try:
+        diagram_types = tool_mermaid_agent.get_supported_diagrams()
+        return {"supported_diagrams": diagram_types}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter tipos de diagrama: {str(e)}")
+
+# Endpoint para histórico de diagramas gerados
+@app.get("/mermaid/history")
+async def get_diagram_history():
+    """Endpoint para obter histórico de diagramas gerados"""
+    # Endpoint para consultar histórico do agente Mermaid
+    
+    if not tool_mermaid_agent:
+        raise HTTPException(status_code=503, detail="Agente Tool Mermaid não disponível")
+    
+    try:
+        history = tool_mermaid_agent.get_diagram_history()
+        return {"diagram_history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter histórico: {str(e)}")
+
+# Endpoint para resetar histórico de diagramas
+@app.post("/mermaid/reset")
+async def reset_mermaid_history():
+    """Endpoint para resetar histórico de diagramas"""
+    # Endpoint para limpar histórico do agente Mermaid
+    
+    if not tool_mermaid_agent:
+        raise HTTPException(status_code=503, detail="Agente Tool Mermaid não disponível")
+    
+    try:
+        tool_mermaid_agent.reset_conversation()
+        return {"status": "success", "message": "Histórico de diagramas resetado com sucesso"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao resetar histórico: {str(e)}")
 
 # Endpoint para adicionar conhecimento ao RAG
 @app.post("/rag/knowledge")
@@ -450,6 +530,16 @@ async def chat_stream(chat_request: ChatRequest):
                 
                 yield f"data: {json.dumps({'status': 'complete', 'message': result})}\n\n"
             
+            elif chat_request.agent_type == "mermaid" and tool_mermaid_agent:
+                # Streaming para Tool Mermaid Agent
+                
+                yield f"data: {json.dumps({'status': 'processing', 'message': '🎨 Gerando diagrama Mermaid...'})}\n\n"
+                
+                diagram_type = getattr(chat_request, 'diagram_type', 'sequence')
+                result = await tool_mermaid_agent.process_message(chat_request.message, diagram_type)
+                
+                yield f"data: {json.dumps({'status': 'complete', 'message': result})}\n\n"
+            
             else:
                 yield f"data: {json.dumps({'status': 'error', 'message': 'Agente não disponível'})}\n\n"
                 # Erro quando agente não está disponível
@@ -489,6 +579,8 @@ async def health_check():
         # Verifica se agente RAG foi inicializado
         "externo_agent": externo_agent is not None,
         # Verifica se agente Externo foi inicializado
+        "tool_mermaid_agent": tool_mermaid_agent is not None,
+        # Verifica se agente Tool Mermaid foi inicializado
         "environment": {
             "firecrawl_key": bool(os.getenv("FIRECRAWL_API_KEY")),
             # Verifica presença da chave (sem expor valor)
@@ -496,7 +588,7 @@ async def health_check():
             # Verifica presença da chave OpenAI
             "pinecone_key": bool(os.getenv("PINECONE_API_KEY"))
             # Verifica presença da chave Pinecone
-            # Agente Externo não requer chaves específicas
+            # Agente Mermaid requer apenas OpenAI
         }
     }
     
@@ -505,7 +597,7 @@ async def health_check():
         # Status geral da aplicação
         "agents": agent_status,
         # Detalhes dos agentes
-        "version": "1.2.0"
+        "version": "1.3.0"
         # Versão atualizada para tracking de deploys
     }
 
@@ -546,12 +638,19 @@ async def agents_info():
                 "description": "Agente para integração com APIs externas como Flowise para processamento especializado",
                 "features": ["Integração Flowise", "APIs externas", "Contexto conversacional", "Formatação automática"],
                 "available": externo_agent is not None
-                # Novo agente na lista de informações
+            },
+            {
+                "type": "mermaid",
+                "name": "Tool Mermaid Agent",
+                "description": "Agente especializado em geração de diagramas Mermaid para visualização de processos e estruturas",
+                "features": ["Diagramas de sequência", "Fluxogramas", "Diagramas de classe", "Gráficos de Gantt", "Diagramas ER"],
+                "available": tool_mermaid_agent is not None
+                # Agente Mermaid na lista de informações
             }
         ]
     }
     # Array de objetos com metadados de cada agente
-    # Atualizado para incluir Agente Externo
+    # Atualizado para incluir Tool Mermaid Agent
 
 # Configuração para desenvolvimento local
 if __name__ == "__main__":

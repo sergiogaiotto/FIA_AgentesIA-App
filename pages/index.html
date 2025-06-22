@@ -77,6 +77,17 @@
         .externo-panel.show {
             display: block;
         }
+        .mermaid-panel {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .mermaid-panel.show {
+            display: block;
+        }
         .status-indicator {
             display: inline-block;
             width: 8px;
@@ -94,9 +105,47 @@
             background-color: #f59e0b;
             animation: pulse 1s infinite;
         }
+        .diagram-type-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .diagram-type-card:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .diagram-type-card.selected {
+            border-color: #1d4ed8;
+            background: #dbeafe;
+        }
+        .mermaid-diagram {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 60vh;
+            }
+            .message-bubble {
+                max-width: 95%;
+            }
         }
     </style>
 </head>
@@ -125,7 +174,7 @@
                 <h2 class="text-lg font-semibold mb-3 text-gray-800">
                     <i class="fas fa-cogs mr-2"></i>Selecione o Agente
                 </h2>
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <!-- MCP Agent -->
                     <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md" 
                          onclick="selectAgent('mcp')" id="mcp-card">
@@ -193,6 +242,23 @@
                             <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Contextual</span>
                         </div>
                     </div>
+
+                    <!-- Tool Mermaid Agent -->
+                    <div class="agent-selector rounded-lg p-4 cursor-pointer transition-all hover:shadow-md"
+                         onclick="selectAgent('mermaid')" id="mermaid-card">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-project-diagram text-teal-600 mr-2"></i>
+                            <h3 class="font-semibold text-gray-800">Tool Mermaid</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Geração de diagramas Mermaid para visualização de processos e estruturas
+                        </p>
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded">Diagramas</span>
+                            <span class="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded">Mermaid</span>
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded">Visualização</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Selected Agent Display -->
@@ -212,6 +278,10 @@
                             <!-- Externo Status Button -->
                             <button id="externo-btn" class="hidden bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition-colors" onclick="toggleExternoPanel()">
                                 <i class="fas fa-cog mr-1"></i>Status & Config
+                            </button>
+                            <!-- Mermaid Diagram Panel Button -->
+                            <button id="mermaid-btn" class="hidden bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700 transition-colors" onclick="toggleMermaidPanel()">
+                                <i class="fas fa-project-diagram mr-1"></i>Tipos de Diagrama
                             </button>
                         </div>
                     </div>
@@ -321,6 +391,64 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Mermaid Agent Panel -->
+                <div id="mermaid-panel" class="mermaid-panel">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-800">
+                        <i class="fas fa-project-diagram mr-2"></i>Tool Mermaid - Tipos de Diagrama
+                    </h3>
+                    
+                    <!-- Diagram Type Selector -->
+                    <div class="mb-4">
+                        <h4 class="font-medium mb-2">Selecione o tipo de diagrama:</h4>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3" id="diagram-type-selector">
+                            <!-- Será preenchido dinamicamente via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Diagram Info -->
+                    <div id="selected-diagram-info" class="bg-gray-50 rounded p-3 mb-4 hidden">
+                        <div class="font-medium mb-1" id="selected-diagram-name"></div>
+                        <div class="text-sm text-gray-600" id="selected-diagram-description"></div>
+                    </div>
+
+                    <!-- Diagram History -->
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-medium">Histórico de Diagramas</h4>
+                            <button onclick="resetMermaidHistory()" 
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                                <i class="fas fa-trash mr-1"></i>Limpar
+                            </button>
+                        </div>
+                        <div id="mermaid-history" class="text-sm text-gray-600">
+                            Carregando histórico...
+                        </div>
+                    </div>
+
+                    <!-- Example Prompts -->
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="font-medium mb-2">Exemplos de Prompts</h4>
+                        <div class="space-y-2">
+                            <button onclick="useSamplePrompt('Crie um diagrama de sequência para login de usuário com autenticação')" 
+                                    class="w-full text-left bg-blue-50 hover:bg-blue-100 p-2 rounded text-sm border">
+                                Login com autenticação (Sequência)
+                            </button>
+                            <button onclick="useSamplePrompt('Fluxograma para processo de aprovação de pedidos')" 
+                                    class="w-full text-left bg-green-50 hover:bg-green-100 p-2 rounded text-sm border">
+                                Aprovação de pedidos (Fluxograma)
+                            </button>
+                            <button onclick="useSamplePrompt('Diagrama de classes para sistema de biblioteca')" 
+                                    class="w-full text-left bg-purple-50 hover:bg-purple-100 p-2 rounded text-sm border">
+                                Sistema de biblioteca (Classes)
+                            </button>
+                            <button onclick="useSamplePrompt('Gráfico de Gantt para projeto de desenvolvimento de app em 3 meses')" 
+                                    class="w-full text-left bg-yellow-50 hover:bg-yellow-100 p-2 rounded text-sm border">
+                                Projeto 3 meses (Gantt)
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -390,6 +518,7 @@
 
     <script>
         let selectedAgent = null;
+        let selectedDiagramType = 'sequence'; // Para agente Mermaid
         let isProcessing = false;
 
         function selectAgent(agentType) {
@@ -410,6 +539,7 @@
             const selectedAgentName = document.getElementById('selected-agent-name');
             const knowledgeBtn = document.getElementById('knowledge-btn');
             const externoBtn = document.getElementById('externo-btn');
+            const mermaidBtn = document.getElementById('mermaid-btn');
             
             selectedAgentDiv.classList.remove('hidden');
             
@@ -417,7 +547,8 @@
                 'mcp': 'Agente MCP',
                 'workflow': 'Agente Workflow',
                 'rag': 'Agente RAG',
-                'externo': 'Agente Externo'
+                'externo': 'Agente Externo',
+                'mermaid': 'Tool Mermaid Agent'
             };
             
             selectedAgentName.textContent = agentNames[agentType];
@@ -425,6 +556,7 @@
             // Hide all special buttons first
             knowledgeBtn.classList.add('hidden');
             externoBtn.classList.add('hidden');
+            mermaidBtn.classList.add('hidden');
             
             // Show relevant button based on agent type
             if (agentType === 'rag') {
@@ -434,6 +566,10 @@
             } else if (agentType === 'externo') {
                 externoBtn.classList.remove('hidden');
                 updateInputHint('Envie prompts para processamento via Flowise...');
+            } else if (agentType === 'mermaid') {
+                mermaidBtn.classList.remove('hidden');
+                loadDiagramTypes();
+                updateInputHint('Descreva o diagrama que deseja criar...');
             } else {
                 updateInputHint(`Pergunte algo para o ${agentNames[agentType]}...`);
             }
@@ -441,6 +577,7 @@
             // Hide all panels
             document.getElementById('knowledge-panel').classList.remove('show');
             document.getElementById('externo-panel').classList.remove('show');
+            document.getElementById('mermaid-panel').classList.remove('show');
             
             // Enable input
             document.getElementById('message-input').placeholder = 
@@ -478,15 +615,23 @@
             isProcessing = true;
             
             try {
+                // Prepare request body
+                const requestBody = {
+                    message: message,
+                    agent_type: selectedAgent
+                };
+                
+                // Add diagram type for Mermaid agent
+                if (selectedAgent === 'mermaid') {
+                    requestBody.diagram_type = selectedDiagramType;
+                }
+
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: message,
-                        agent_type: selectedAgent
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
@@ -494,7 +639,7 @@
                 // Hide typing indicator
                 hideTypingIndicator();
                 
-                // Add bot response with special handling for RAG
+                // Add bot response with special handling for RAG and Mermaid
                 addMessage(data.response, 'bot', data.status, data);
                 
             } catch (error) {
@@ -558,6 +703,36 @@
                     });
                     
                     ragExtras += `
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Add Mermaid-specific elements
+            if (!isUser && selectedAgent === 'mermaid' && status === 'success') {
+                // Extract Mermaid code from response and render it
+                const mermaidMatch = content.match(/```mermaid\s*([\s\S]*?)\s*```/);
+                if (mermaidMatch) {
+                    const mermaidCode = mermaidMatch[1];
+                    const timestamp = Date.now();
+                    ragExtras += `
+                        <div class="mt-3">
+                            <div class="font-medium text-sm text-gray-700 mb-2">
+                                <i class="fas fa-project-diagram mr-1"></i>Diagrama Mermaid:
+                            </div>
+                            <div class="mermaid-diagram" id="mermaid-${timestamp}">
+                                <pre>${mermaidCode}</pre>
+                            </div>
+                            <div class="mt-2 space-x-2">
+                                <button onclick="copyMermaidCode('${timestamp}')" 
+                                        class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">
+                                    <i class="fas fa-copy mr-1"></i>Copiar Código
+                                </button>
+                                <button onclick="openMermaidLive('${timestamp}')" 
+                                        class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                    <i class="fas fa-external-link-alt mr-1"></i>Visualizar Online
+                                </button>
                             </div>
                         </div>
                     `;
@@ -908,6 +1083,178 @@
                     statusDiv.innerHTML = originalContent;
                 }, 2000);
             }
+        }
+
+        // Mermaid Agent Functions
+        function toggleMermaidPanel() {
+            const panel = document.getElementById('mermaid-panel');
+            panel.classList.toggle('show');
+            
+            if (panel.classList.contains('show')) {
+                loadDiagramTypes();
+                loadMermaidHistory();
+            }
+        }
+
+        async function loadDiagramTypes() {
+            try {
+                const response = await fetch('/mermaid/diagram-types');
+                const data = await response.json();
+                
+                const selectorDiv = document.getElementById('diagram-type-selector');
+                
+                if (data.supported_diagrams && data.supported_diagrams.length > 0) {
+                    selectorDiv.innerHTML = data.supported_diagrams.map(diagram => `
+                        <div class="diagram-type-card ${diagram.type === selectedDiagramType ? 'selected' : ''}" 
+                             onclick="selectDiagramType('${diagram.type}')">
+                            <div class="font-medium text-sm">${diagram.name}</div>
+                            <div class="text-xs text-gray-600 mt-1">${diagram.description}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    selectorDiv.innerHTML = `
+                        <div class="text-center text-gray-500 col-span-full">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Tipos de diagrama não disponíveis
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('diagram-type-selector').innerHTML = `
+                    <div class="text-center text-red-600 col-span-full">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Erro ao carregar tipos de diagrama
+                    </div>
+                `;
+            }
+        }
+
+        function selectDiagramType(type) {
+            selectedDiagramType = type;
+            
+            // Update visual selection
+            document.querySelectorAll('.diagram-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.diagram-type-card').classList.add('selected');
+            
+            // Show info about selected diagram
+            const infoDiv = document.getElementById('selected-diagram-info');
+            const nameDiv = document.getElementById('selected-diagram-name');
+            const descDiv = document.getElementById('selected-diagram-description');
+            
+            // Map diagram types to friendly names
+            const diagramInfo = {
+                'sequence': { name: 'Diagrama de Sequência', desc: 'Mostra interações entre entidades ao longo do tempo' },
+                'flowchart': { name: 'Fluxograma', desc: 'Representa fluxos de processo e decisões' },
+                'classDiagram': { name: 'Diagrama de Classes', desc: 'Mostra estruturas orientadas a objetos' },
+                'stateDiagram': { name: 'Diagrama de Estados', desc: 'Representa máquinas de estado e transições' },
+                'gantt': { name: 'Gráfico de Gantt', desc: 'Cronogramas e planejamento de projetos' },
+                'erDiagram': { name: 'Diagrama ER', desc: 'Modelos de dados e relacionamentos' },
+                'journey': { name: 'Jornada do Usuário', desc: 'Experiência do usuário passo a passo' }
+            };
+            
+            const info = diagramInfo[type] || { name: type, desc: 'Tipo de diagrama especializado' };
+            nameDiv.textContent = info.name;
+            descDiv.textContent = info.desc;
+            infoDiv.classList.remove('hidden');
+            
+            updateInputHint(`Descreva seu ${info.name.toLowerCase()}...`);
+        }
+
+        async function loadMermaidHistory() {
+            try {
+                const response = await fetch('/mermaid/history');
+                const data = await response.json();
+                
+                const historyDiv = document.getElementById('mermaid-history');
+                
+                if (data.diagram_history && data.diagram_history.length > 0) {
+                    const historyHtml = data.diagram_history.slice(0, 5).map((item, index) => {
+                        const timestamp = new Date(item.timestamp * 1000).toLocaleString('pt-BR');
+                        return `
+                            <div class="bg-gray-50 p-2 rounded mb-2">
+                                <div class="font-medium text-sm">${item.response.diagram_type}</div>
+                                <div class="text-xs text-gray-600">${item.request.prompt.substring(0, 50)}...</div>
+                                <div class="text-xs text-gray-500">${timestamp}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    historyDiv.innerHTML = `
+                        <div class="mb-2 font-medium">Últimos ${Math.min(data.diagram_history.length, 5)} diagramas:</div>
+                        ${historyHtml}
+                        ${data.diagram_history.length > 5 ? `<div class="text-xs text-gray-500">... e mais ${data.diagram_history.length - 5} diagramas</div>` : ''}
+                    `;
+                } else {
+                    historyDiv.innerHTML = `
+                        <div class="text-gray-500 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Nenhum diagrama gerado ainda
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('mermaid-history').innerHTML = `
+                    <div class="text-red-600 text-center">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Erro ao carregar histórico
+                    </div>
+                `;
+            }
+        }
+
+        async function resetMermaidHistory() {
+            if (!confirm('Tem certeza que deseja limpar o histórico de diagramas?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/mermaid/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('✅ Histórico limpo com sucesso!');
+                    loadMermaidHistory(); // Reload history
+                } else {
+                    alert('❌ Erro ao limpar histórico');
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        function useSamplePrompt(prompt) {
+            document.getElementById('message-input').value = prompt;
+            document.getElementById('message-input').focus();
+            // Scroll to input
+            document.getElementById('message-input').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyMermaidCode(timestamp) {
+            const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
+            const code = mermaidDiv.querySelector('pre').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Código Mermaid copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert('❌ Erro ao copiar código. Tente selecionar e copiar manualmente.');
+            });
+        }
+
+        function openMermaidLive(timestamp) {
+            const mermaidDiv = document.getElementById(`mermaid-${timestamp}`);
+            const code = mermaidDiv.querySelector('pre').textContent;
+            const encodedCode = encodeURIComponent(code);
+            const url = `https://mermaid.live/edit#pako:${btoa(code)}`;
+            window.open(url, '_blank');
         }
 
         // Initialize
