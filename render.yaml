@@ -247,11 +247,6 @@ services:
         # Arquivos de ambiente (contêm credenciais)
         # .env*: wildcard para .env, .env.local, etc.
         - docs/**
-        # Documentação adicional
-        - exemplo_uso_classifica_imagem.py
-        # Scripts de exemplo não afetam produção
-        - CLASSIFICA_IMAGEM_DOCS.md
-        # Documentação específica
     
     # Configurações de memória e CPU
     scaling:

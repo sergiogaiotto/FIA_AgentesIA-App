@@ -109,41 +109,41 @@ aiohttp==3.9.5
 # Usado pelo ExternoAgent para comunicação com Flowise API
 # Melhor performance que requests em aplicações async
 
-llama-index==0.12.3
+# llama-index==0.12.3
 # Framework principal do LlamaIndex para aplicações LLM
 # Versão 0.12.3: versão estável mais recente
 # LlamaIndex: framework focado em RAG e data-aware applications
 # Funcionalidades: indexing, querying, multi-modal support
 # Usado pelo ClassificaImagemAgent como framework base
 
-llama-index-llms-openai==0.3.1
+# llama-index-llms-openai==0.3.1
 # Integração LlamaIndex com modelos OpenAI
 # Versão 0.3.1: compatível com llama-index==0.12.3
 # Funcionalidades: OpenAI LLM integration, configuração simplificada
 # Usado pelo ClassificaImagemAgent para processamento de texto
 
-llama-index-multi-modal-llms-openai==0.3.0
+# llama-index-multi-modal-llms-openai==0.3.0
 # Integração LlamaIndex com modelos multimodais OpenAI
 # Versão 0.3.0: versão estável para GPT-4 Vision
 # Funcionalidades: GPT-4 Vision, análise de imagens, multi-modal prompts
 # CORE do ClassificaImagemAgent para análise visual
 # Suporta: image understanding, visual question answering
 
-pillow==10.4.0
+# pillow==10.4.0
 # Python Imaging Library (PIL) modernizada
 # Versão 10.4.0: versão estável com suporte a múltiplos formatos
 # Funcionalidades: manipulação de imagens, conversão de formatos
 # Usado pelo ClassificaImagemAgent para processamento de imagens
 # Suporte a: JPEG, PNG, GIF, WebP, etc.
 
-opencv-python-headless==4.10.0.84
+# opencv-python-headless==4.10.0.84
 # OpenCV para Python sem dependências GUI
 # Versão 4.10.0.84: versão headless ideal para servidores
 # Funcionalidades: computer vision, processamento de imagem
 # Usado pelo ClassificaImagemAgent para análise avançada de imagens
 # headless: sem interface gráfica, ideal para produção
 
-numpy==1.26.4
+# numpy==1.26.4
 # Biblioteca fundamental para computação científica
 # Versão 1.26.4: versão estável compatível com OpenCV e Pillow
 # Funcionalidades: arrays multidimensionais, operações matemáticas
