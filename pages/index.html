@@ -1254,6 +1254,7 @@
             const code = mermaidDiv.querySelector('pre').textContent;
             const encodedCode = encodeURIComponent(code);
             const url = `https://mermaid.live/edit#pako:${btoa(code)}`;
+            alert(url);
             window.open(url, '_blank');
         }
 
