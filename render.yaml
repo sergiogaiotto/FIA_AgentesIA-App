@@ -1,4 +1,4 @@
-# render.yaml - Comentado Linha a Linha
+# render.yaml - Comentado Linha a Linha (Atualizado)
 
 services:
 # Seção principal: define todos os serviços da aplicação
@@ -35,6 +35,7 @@ services:
       pip install -r requirements.txt
       # Instala dependências Python listadas em requirements.txt
       # -r: lê lista de dependências de arquivo
+      # Inclui novas dependências: pinecone-client, langchain-pinecone
       
       npm install -g firecrawl-mcp
       # Instala globalmente o pacote Node.js firecrawl-mcp
@@ -84,6 +85,12 @@ services:
         sync: false  # Será configurada via dashboard do Render
         # Chave API da OpenAI
         # Configuração manual protege credenciais sensíveis
+        
+      - key: PINECONE_API_KEY
+        sync: false  # Será configurada via dashboard do Render
+        # Chave API do Pinecone para vector database
+        # Necessária para funcionalidade RAG (Retrieval-Augmented Generation)
+        # Deve ser configurada manualmente por segurança
     
     # Configurações de recurso
     disk:
@@ -100,6 +107,7 @@ services:
       sizeGB: 1
       # Tamanho do disco em GB
       # 1GB: suficiente para logs e dados temporários
+      # RAG usa Pinecone (cloud), não armazenamento local
     
     # Auto-deploy do branch main
     branch: main
@@ -146,6 +154,7 @@ services:
     # Tempo de espera antes do primeiro health check
     # 30 segundos: permite inicialização completa da aplicação
     # Evita falsos positivos durante startup
+    # RAG Agent pode precisar de tempo extra para configurar Pinecone
     
     # Configurações de build
     buildFilter:
@@ -157,14 +166,15 @@ services:
         - app.py
         # Arquivo principal da aplicação
         - requirements.txt
-        # Dependências Python
+        # Dependências Python (atualizado com Pinecone)
         - agents/**
         # Todos os arquivos no diretório agents
         # **: wildcard recursivo (inclui subdiretórios)
+        # Inclui novo rag_agent.py
         - static/**
         # Arquivos estáticos (CSS, JS)
         - pages/**
-        # Templates HTML
+        # Templates HTML (index.html atualizado)
         
       ignoredPaths:
       # Caminhos ignorados (não trigeram rebuild)
