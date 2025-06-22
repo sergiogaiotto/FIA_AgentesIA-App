@@ -1,4 +1,4 @@
-# app.py - Comentado Linha a Linha
+# app.py - Comentado Linha a Linha (Atualizado com RAG Agent)
 
 from fastapi import FastAPI, Request, HTTPException
 # FastAPI: framework web moderno para APIs Python
@@ -33,7 +33,7 @@ import os
 # Módulo para interação com sistema operacional
 # Usado para acessar variáveis de ambiente
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 # Type hints para melhor documentação
 # Dict, Any: tipos para estruturas de dados flexíveis
 
@@ -44,17 +44,19 @@ import uvicorn
 # Imports dos agentes adaptados
 from agents.mcp_agent import MCPAgent
 from agents.workflow_agent import WorkflowAgent
-# Importação dos dois tipos de agentes desenvolvidos
+from agents.rag_agent import RAGAgent
+# Importação dos três tipos de agentes desenvolvidos
 # Modularização: cada agente em arquivo separado
+# RAGAgent: novo agente para Retrieval-Augmented Generation
 
 # Configuração da aplicação FastAPI
 app = FastAPI(
     title="Agentes de IA - FIA",
     # Título da API (aparece na documentação)
-    description="Plataforma com dois agentes especializados em pesquisa e análise",
-    # Descrição detalhada para documentação
-    version="1.0.0"
-    # Versionamento da API para controle de releases
+    description="Plataforma com três agentes especializados em pesquisa, análise e RAG",
+    # Descrição atualizada para incluir RAG
+    version="1.1.0"
+    # Versionamento atualizado para nova funcionalidade
 )
 
 # Configuração de arquivos estáticos e templates
@@ -71,15 +73,18 @@ templates = Jinja2Templates(directory="pages")
 # Instâncias dos agentes (inicializadas globalmente)
 mcp_agent = None
 workflow_agent = None
+rag_agent = None
 # Variáveis globais para instâncias dos agentes
 # None inicial: agentes serão inicializados no startup
+# rag_agent: nova instância para agente RAG
 
 class ChatRequest(BaseModel):
     """Modelo para requisições de chat"""
     message: str
     # Mensagem do usuário (campo obrigatório)
-    agent_type: str  # "mcp" ou "workflow"
+    agent_type: str  # "mcp", "workflow" ou "rag"
     # Tipo de agente a ser usado (validação manual)
+    # Atualizado para incluir "rag"
 
 class ChatResponse(BaseModel):
     """Modelo para respostas de chat"""
@@ -89,6 +94,19 @@ class ChatResponse(BaseModel):
     # Tipo de agente que processou
     status: str
     # Status da operação (success/error)
+    sources: Optional[List[Dict[str, Any]]] = None
+    # Fontes utilizadas (específico para RAG)
+    confidence: Optional[float] = None
+    # Nível de confiança (específico para RAG)
+
+class RAGKnowledgeRequest(BaseModel):
+    """Modelo para adicionar conhecimento ao RAG"""
+    url: Optional[str] = None
+    # URL para scraping (opcional)
+    text: Optional[str] = None
+    # Texto direto (opcional)
+    source_id: Optional[str] = None
+    # ID da fonte (obrigatório para texto)
 
 # Inicialização dos agentes
 async def initialize_agents():
@@ -96,9 +114,10 @@ async def initialize_agents():
     # Função assíncrona para setup dos agentes
     # Async: permite inicialização não-bloqueante
     
-    global mcp_agent, workflow_agent
+    global mcp_agent, workflow_agent, rag_agent
     # Global: modifica variáveis no escopo global
     # Necessário para compartilhar instâncias entre requests
+    # rag_agent: incluído nas variáveis globais
     
     try:
         # Inicializa agente MCP (se chaves estão disponíveis)
@@ -116,6 +135,17 @@ async def initialize_agents():
             # Mesma verificação para agente Workflow
             workflow_agent = WorkflowAgent()
             print("✅ Workflow Agent inicializado")
+        
+        # Inicializa agente RAG
+        if (os.getenv("PINECONE_API_KEY") and 
+            os.getenv("OPENAI_API_KEY")):
+            # RAG requer Pinecone + OpenAI
+            # Firecrawl é opcional para RAG
+            
+            rag_agent = RAGAgent()
+            await rag_agent.initialize()
+            # Async initialization: configura Pinecone
+            print("✅ RAG Agent inicializado")
             
     except Exception as e:
         print(f"❌ Erro ao inicializar agentes: {e}")
@@ -194,9 +224,45 @@ async def chat_endpoint(chat_request: ChatRequest):
                 status="success"
             )
         
+        elif chat_request.agent_type == "rag":
+            # Novo roteamento para agente RAG
+            
+            if not rag_agent:
+                return ChatResponse(
+                    response="❌ Agente RAG não está disponível. Verifique as configurações do Pinecone.",
+                    agent_type="rag",
+                    status="error"
+                )
+            
+            rag_response = await rag_agent.query(chat_request.message)
+            # query: método específico do RAGAgent
+            
+            # Processa fontes para resposta
+            sources = []
+            if rag_response.sources:
+                sources = [
+                    {
+                        "content": doc.content[:200] + "..." if len(doc.content) > 200 else doc.content,
+                        # Trunca conteúdo para preview
+                        "score": doc.score,
+                        "metadata": doc.metadata
+                    }
+                    for doc in rag_response.sources
+                ]
+            
+            return ChatResponse(
+                response=rag_response.answer,
+                agent_type="rag",
+                status="success",
+                sources=sources,
+                # Inclui fontes utilizadas
+                confidence=rag_response.confidence
+                # Inclui nível de confiança
+            )
+        
         else:
             raise HTTPException(status_code=400, detail="Tipo de agente inválido")
-            # Validação: agent_type deve ser "mcp" ou "workflow"
+            # Validação: agent_type deve ser "mcp", "workflow" ou "rag"
             
     except Exception as e:
         return ChatResponse(
@@ -206,6 +272,72 @@ async def chat_endpoint(chat_request: ChatRequest):
         )
         # Tratamento genérico de exceções
         # Retorna erro estruturado em vez de falhar
+
+# Novo endpoint para adicionar conhecimento ao RAG
+@app.post("/rag/knowledge")
+async def add_knowledge(request: RAGKnowledgeRequest):
+    """Endpoint para adicionar conhecimento à base RAG"""
+    # Endpoint específico para gestão da base de conhecimento
+    # Permite expansão dinâmica do conhecimento RAG
+    
+    if not rag_agent:
+        raise HTTPException(status_code=503, detail="Agente RAG não disponível")
+    # 503 Service Unavailable: serviço não configurado
+    
+    try:
+        if request.url:
+            # Adiciona conhecimento via URL
+            success = await rag_agent.add_knowledge_from_url(request.url)
+            
+            if success:
+                return {"status": "success", "message": f"Conhecimento adicionado da URL: {request.url}"}
+            else:
+                return {"status": "error", "message": "Falha ao adicionar conhecimento da URL"}
+        
+        elif request.text and request.source_id:
+            # Adiciona conhecimento via texto direto
+            success = await rag_agent.add_knowledge_from_text(request.text, request.source_id)
+            
+            if success:
+                return {"status": "success", "message": f"Conhecimento adicionado do texto: {request.source_id}"}
+            else:
+                return {"status": "error", "message": "Falha ao adicionar conhecimento do texto"}
+        
+        else:
+            raise HTTPException(status_code=400, detail="URL ou (texto + source_id) são obrigatórios")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao adicionar conhecimento: {str(e)}")
+
+# Endpoint para estatísticas do RAG
+@app.get("/rag/stats")
+async def rag_stats():
+    """Endpoint para estatísticas da base de conhecimento RAG"""
+    # Endpoint de monitoramento específico para RAG
+    
+    if not rag_agent:
+        raise HTTPException(status_code=503, detail="Agente RAG não disponível")
+    
+    try:
+        stats = await rag_agent.get_knowledge_stats()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}")
+
+# Endpoint para sugerir fontes de conhecimento
+@app.get("/rag/suggest-sources/{domain}")
+async def suggest_sources(domain: str):
+    """Endpoint para sugerir fontes de conhecimento para um domínio"""
+    # Feature: sugestão automática de fontes relevantes
+    
+    if not rag_agent:
+        raise HTTPException(status_code=503, detail="Agente RAG não disponível")
+    
+    try:
+        suggestions = await rag_agent.suggest_knowledge_sources(domain)
+        return {"domain": domain, "suggested_sources": suggestions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao sugerir fontes: {str(e)}")
 
 # Endpoint para streaming de respostas (opcional para UX melhor)
 @app.post("/chat/stream")
@@ -242,6 +374,15 @@ async def chat_stream(chat_request: ChatRequest):
                 
                 yield f"data: {json.dumps({'status': 'complete', 'message': result})}\n\n"
             
+            elif chat_request.agent_type == "rag" and rag_agent:
+                # Streaming para RAG Agent
+                
+                yield f"data: {json.dumps({'status': 'processing', 'message': '🧠 Buscando na base de conhecimento...'})}\n\n"
+                
+                result = await rag_agent.query(chat_request.message)
+                
+                yield f"data: {json.dumps({'status': 'complete', 'message': result.answer})}\n\n"
+            
             else:
                 yield f"data: {json.dumps({'status': 'error', 'message': 'Agente não disponível'})}\n\n"
                 # Erro quando agente não está disponível
@@ -277,11 +418,15 @@ async def health_check():
         # Verifica se agente MCP foi inicializado
         "workflow_agent": workflow_agent is not None,
         # Verifica se agente Workflow foi inicializado
+        "rag_agent": rag_agent is not None,
+        # Verifica se agente RAG foi inicializado
         "environment": {
             "firecrawl_key": bool(os.getenv("FIRECRAWL_API_KEY")),
             # Verifica presença da chave (sem expor valor)
-            "openai_key": bool(os.getenv("OPENAI_API_KEY"))
+            "openai_key": bool(os.getenv("OPENAI_API_KEY")),
             # Verifica presença da chave OpenAI
+            "pinecone_key": bool(os.getenv("PINECONE_API_KEY"))
+            # Verifica presença da chave Pinecone
         }
     }
     
@@ -290,8 +435,8 @@ async def health_check():
         # Status geral da aplicação
         "agents": agent_status,
         # Detalhes dos agentes
-        "version": "1.0.0"
-        # Versão para tracking de deploys
+        "version": "1.1.0"
+        # Versão atualizada para tracking de deploys
     }
 
 # Endpoint para informações dos agentes
@@ -317,10 +462,19 @@ async def agents_info():
                 "description": "Agente especializado em pesquisa estruturada e análise comparativa",
                 "features": ["Workflow estruturado", "Análise comparativa", "Recomendações técnicas"],
                 "available": workflow_agent is not None
+            },
+            {
+                "type": "rag",
+                "name": "Agente RAG",
+                "description": "Agente de Retrieval-Augmented Generation com Pinecone para pesquisa semântica",
+                "features": ["Pesquisa semântica", "Base de conhecimento", "Citação de fontes", "Scoring de confiança"],
+                "available": rag_agent is not None
+                # Novo agente na lista de informações
             }
         ]
     }
     # Array de objetos com metadados de cada agente
+    # Atualizado para incluir RAG Agent
 
 # Configuração para desenvolvimento local
 if __name__ == "__main__":
