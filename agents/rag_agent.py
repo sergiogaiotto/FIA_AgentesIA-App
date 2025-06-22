@@ -115,7 +115,7 @@ class PineconeService:
     # Service class: encapsula operações do Pinecone
     # Abstração: isola complexidade da API Pinecone
     
-    def __init__(self, index_name: str = "fiagente"):
+    def __init__(self, index_name: str = "fia-agente-ia"):
         """Inicializa serviço Pinecone"""
         # index_name: nome do índice no Pinecone
         # Default: nome descritivo para base de conhecimento
@@ -355,7 +355,7 @@ class RAGAgent:
     # Classe principal que orquestra RAG workflow
     # Combina: retrieval (Pinecone) + generation (OpenAI)
     
-    def __init__(self, index_name: str = "rag-knowledge-base"):
+    def __init__(self, index_name: str = "fia-agente-ia"):
         """Inicializa agente RAG"""
         
         # Validação de chaves de API
@@ -372,7 +372,7 @@ class RAGAgent:
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             # Modelo otimizado: boa qualidade, custo menor
-            temperature=0.1,
+            temperature=0.0,
             # Baixa temperatura: respostas mais determinísticas
             # RAG precisa de consistência e precisão
             openai_api_key=os.getenv("OPENAI_API_KEY")
@@ -380,10 +380,10 @@ class RAGAgent:
         
         # Configuração de text splitting
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
+            chunk_size=512,
             # Tamanho do chunk: balance entre contexto e performance
             # 1000 chars: suficiente para parágrafos completos
-            chunk_overlap=200,
+            chunk_overlap=128,
             # Overlap: mantém continuidade semântica
             # 200 chars: overlap significativo mas não excessivo
             separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
@@ -399,22 +399,22 @@ class RAGAgent:
         # Sistema de prompt
         self.system_prompt = """Você é um assistente especializado em RAG (Retrieval-Augmented Generation).
 
-Sua função é:
-1. Analisar a pergunta do usuário
-2. Usar os documentos fornecidos como contexto
-3. Gerar respostas precisas e bem fundamentadas
-4. Citar as fontes utilizadas
-
-Diretrizes:
-- Base suas respostas APENAS nos documentos fornecidos
-- Se não tiver informação suficiente, seja honesto sobre isso
-- Cite específicamente as fontes relevantes
-- Mantenha respostas claras e objetivas
-- Use formatação markdown quando apropriado
-
-Sempre inclua uma seção "Fontes:" no final da resposta."""
-        # System prompt específico para RAG
-        # Enfatiza: precisão, citação de fontes, honestidade
+                            Sua função é:
+                            1. Analisar a pergunta do usuário
+                            2. Usar os documentos fornecidos como contexto
+                            3. Gerar respostas precisas e bem fundamentadas
+                            4. Citar as fontes utilizadas
+                            
+                            Diretrizes:
+                            - Base suas respostas APENAS nos documentos fornecidos
+                            - Se não tiver informação suficiente, seja honesto sobre isso
+                            - Cite específicamente as fontes relevantes
+                            - Mantenha respostas claras e objetivas
+                            - Use formatação markdown quando apropriado
+                            
+                            Sempre inclua uma seção "Fontes:" no final da resposta."""
+                            # System prompt específico para RAG
+                            # Enfatiza: precisão, citação de fontes, honestidade
     
     async def initialize(self):
         """Inicializa agente (configura Pinecone)"""
@@ -587,9 +587,9 @@ Por favor, responda baseando-se apenas nas informações fornecidas no contexto.
             # Enumera documentos para referência
             
             context_part = f"""--- Documento {i} (Score: {doc.score:.3f}) ---
-Fonte: {doc.metadata.get('source_url', doc.metadata.get('source_id', 'Desconhecido'))}
-Conteúdo: {doc.content}
-"""
+            Fonte: {doc.metadata.get('source_url', doc.metadata.get('source_id', 'Desconhecido'))}
+            Conteúdo: {doc.content}
+            """
             context_parts.append(context_part)
         
         return "\n\n".join(context_parts)
