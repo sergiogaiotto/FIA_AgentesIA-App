@@ -75,6 +75,9 @@ Plataforma avançada com **seis agentes especializados** em pesquisa, análise, 
   - [Pinecone](https://www.pinecone.io/) (RAG Agent)
   - API Flowise (Agente Externo - opcional)
 
+![image](https://github.com/user-attachments/assets/74dae25c-991c-4358-9de2-b2a426da9885)
+
+
 ### 1. Clone do Repositório
 ```bash
 git clone https://github.com/sergiogaiotto/FIA_AgentesIA
